@@ -1,9 +1,9 @@
 ---
 name: cer-prosit-groupe
-description: "Construire le CER (compte rendu de prosit) commun d'un groupe d'étudiants Ucac-Icam, puis une version par membre (page de garde et en-tête à son nom), à partir de l'énoncé, du prosit aller et du prosit retour. Pour le service multi-étudiants ; distinct du skill personnel cer-prosit."
+description: "Construire le CER (compte rendu de prosit) commun d'un groupe d'étudiants Ucac-Icam, puis une version propre à chaque membre (son thème graphique et sa propre rédaction, mêmes faits et mêmes verdicts), à partir de l'énoncé, du prosit aller et du prosit retour. Pour le service multi-étudiants ; distinct du skill personnel cer-prosit."
 ---
 
-# CER de prosit pour un groupe — un contenu, une version par membre
+# CER de prosit pour un groupe — un fond commun, une version par membre
 
 À utiliser par le service CER quand un prosit est déposé pour un groupe. Ce skill ne contient **aucune identité en dur** : les membres changent d'un prosit à l'autre et sont fournis à chaque fois.
 
@@ -13,7 +13,7 @@ Contexte : à l'Ucac-Icam, un prosit se déroule en pédagogie par problème. Le
 
 | Fichier | Obligatoire | Contenu |
 |---|---|---|
-| `prosit.json` | oui | `{"numero": 3, "notion": "…", "cours": "GLOG461", "cmid": 4957, "groupe": "Groupe 2", "annee": "2026/2027", "membres": [{"nom": "MASSOMA", "prenoms": "Edouard Matt-Dieter", "id_etudiant": "…"}, …]}` |
+| `prosit.json` | oui | `{"numero": 3, "notion": "…", "cours": "GLOG461", "cmid": 4957, "groupe": "Groupe 2", "annee": "2026/2027", "membres": [{"nom": "MASSOMA", "prenoms": "Edouard Matt-Dieter", "id_etudiant": "…", "theme": {…}}, …]}` (voir « Thèmes ») |
 | `enonce` | fortement conseillé | texte du prosit |
 | `aller` | non | prosit aller du groupe |
 | `retour` | fortement conseillé | verdicts des pistes, corrections du tuteur, ressources |
@@ -58,11 +58,25 @@ Page de garde : « CER PROSIT N », sujet, sous-titre éventuel, rédigé par (l
 3. **Recherche** : 8 à 15 recherches web, une par notion ou étape. Sources primaires d'abord (normes ISO/IEEE, cours universitaires, organismes, livres de référence). Ne jamais inventer de référence, de chiffre ou de citation.
 4. **Rédiger** II, III, conclusion, bibliographie : français correct, ton de rapport d'ingénieur, « nous » pour le groupe, sigles expliqués à leur première apparition, paraphrase (aucune phrase copiée), termes clés en gras, 6 à 10 pages hors garde.
 5. **Mettre en forme** un .docx maître selon la charte, avec le skill docx.
-6. **Décliner** : une copie par membre, où seuls changent la ligne « Rédigé par », l'en-tête (« Prénom NOM · Groupe ») et les propriétés auteur du fichier. Nom de fichier : `CER_Prosit_<N>_<NOM>_<Prenom>.docx` (sans accents ni espaces). Le texte du document doit rester identique en dehors de ces champs.
+6. **Décliner** : une version par membre.
+   - **Fond commun, obligatoire** : mêmes mots clés, problématique, pistes, plan d'action, verdicts, sources, chiffres et tableaux (mêmes données). Le prosit aller et le retour du groupe restent la référence de tous.
+   - **Rédaction propre à chaque membre** : reformuler les parties II, III et la conclusion (tournures, ordre des phrases, exemples concrets choisis parmi ceux qu'appuient les sources), sans ajouter d'affirmation non sourcée ni changer un verdict. Les définitions de la partie I peuvent rester proches.
+   - **Thème propre à chaque membre** : appliquer `theme` (voir « Thèmes »).
+   - Nom de fichier : `CER_Prosit_<N>_<NOM>_<Prenom>.docx` (sans accents ni espaces).
 7. **Vérifier** avec la grille, corriger, revérifier.
 8. **Livrer** dans le dossier du prosit : les .docx par membre, et `livraison.json` : `{"statut": "pret" | "a-relire", "fichiers": {"<id_etudiant>": "<nom de fichier>"}, "a_relire": ["…"], "sources": N}`. Le dépôt sur Moodle et les messages WhatsApp sont faits par le service, pas par ce skill.
 
-## Charte graphique
+## Thèmes
+
+`theme` (choisi par l'étudiant sur le site) : `{"police": "Calibri", "couleur_principale": "2F3437", "couleur_accent": "0F766E", "garde": "bandeau" | "sobre" | "colonne"}`.
+- Sans `theme` : appliquer le thème par défaut ci-dessous (anthracite + pétrole, garde « bandeau »).
+- Polices autorisées : Calibri, Cambria, Georgia, Arial, Segoe UI, Garamond. Toute autre valeur → Calibri.
+- Couleurs : hexadécimal à 6 chiffres. Refuser (et prendre le défaut) une couleur trop claire pour du texte sur blanc (contraste inférieur à 4,5:1) ; les teintes claires dérivées (encadré, ligne alternée) sont calculées à partir de l'accent (environ 90 % vers le blanc).
+- Couleurs des verdicts fixes pour tous (vert 4D7C0F, orange B45309, rouge B91C1C) pour rester lisibles.
+- Gardes : « bandeau » = bandeau pleine largeur décrit ci-dessous ; « sobre » = fond blanc, titre en couleur principale, filet accent ; « colonne » = bande verticale accent à gauche sur toute la hauteur.
+- Tout le reste de la charte (mise en page, titres, tableaux, légendes, en-têtes) reste commun.
+
+## Charte graphique (thème par défaut)
 
 - A4, marges 2,2 cm. Calibri 11, justifié, interligne 1,15, 6 pt après. Texte 262626.
 - Palette : anthracite 2F3437, pétrole 0F766E, lignes D5DADB, ligne alternée F4F6F6, encadré E7F3F1, gris 6B7275. Verdicts : vert 4D7C0F, orange B45309, rouge B91C1C. **Aucun bleu**, y compris dans les styles et le thème.
@@ -88,5 +102,5 @@ Pièges : les modèles python-docx contiennent des bleus cachés (styles, thème
 6. Chaque sigle est expliqué à sa première apparition.
 7. Tous les tableaux sont numérotés, légendés et cités.
 8. Rendu regardé page par page (PDF puis images) : garde correcte, aucun bleu, en-tête et pied dès la page 2 ; le validateur docx passe.
-9. Une version par membre de `prosit.json`, chacune avec le bon nom sur la garde, dans l'en-tête et dans les propriétés ; aucun autre écart entre les versions.
+9. Une version par membre de `prosit.json` : bon nom sur la garde, dans l'en-tête et les propriétés ; thème du membre appliqué ; rédaction différente d'une version à l'autre (aucun paragraphe de II ou III identique) ; mêmes pistes, verdicts, sources et chiffres dans toutes les versions.
 10. Corrections du tuteur intégrées ; écarts avec le retour listés dans `a_relire`.
