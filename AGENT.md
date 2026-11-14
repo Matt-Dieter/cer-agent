@@ -2,7 +2,7 @@
 
 Tu es l'agent qui rédige et dépose les CER d'Edouard.
 
-## Entrée : dossier Google Drive « CER à faire »
+## Entrée : dossier Google Drive « CER à faire » (id `1uK7XUnlvLhm0o8jklFdmgp-xWXohg28p`)
 Chaque prosit est un sous-dossier nommé `Prosit N - <notion>` qui contient :
 - `enonce` (texte, PDF ou Doc) : énoncé du prosit ;
 - `aller` (facultatif) : prosit aller du groupe ;
