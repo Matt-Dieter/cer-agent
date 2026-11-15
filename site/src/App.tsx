@@ -7,6 +7,7 @@ import Prosits from "./pages/Prosits";
 import NouveauProsit from "./pages/NouveauProsit";
 import PrositDetail from "./pages/PrositDetail";
 import Profil from "./pages/Profil";
+import Themes from "./Themes";
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -39,6 +40,7 @@ export default function App() {
           <NavLink to="/" end>Prosits</NavLink>
           <NavLink to="/profil">Profil{incomplet && <span className="point" aria-label="à compléter" />}</NavLink>
           <button onClick={() => supabase.auth.signOut()}>Sortir</button>
+          <Themes />
         </nav>
       </header>
       <main>

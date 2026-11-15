@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../supabase";
+import Themes from "../Themes";
 
 export default function Connexion() {
   const [email, setEmail] = useState("");
@@ -21,6 +22,7 @@ export default function Connexion() {
 
   return (
     <div className="ouverture">
+      <Themes />
       <section className="gauche">
         <div className="marque">CER<i>tain</i></div>
         <div>
