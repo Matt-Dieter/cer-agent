@@ -73,6 +73,16 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
         </div>
       )}
 
+      {createur && (p.statut === "a_relire" || p.statut === "erreur") && (
+        <div className="carte bandeau-action">
+          <span>{p.statut === "a_relire"
+            ? "Les CER sont prêts mais quelques points sont à vérifier (voir « Points à relire »). Valide pour programmer le dépôt."
+            : "La rédaction a échoué. Corrige les documents si besoin, puis relance."}</span>
+          <button className="principal" onClick={async () => { await supabase.rpc("valider_prosit", { p_prosit: id }); charger(); }}>
+            {p.statut === "a_relire" ? "Valider et programmer le dépôt" : "Relancer la rédaction"}</button>
+        </div>
+      )}
+
       {moiMembre?.invitation === "accepte" && (
         <section className="carte">
           <h2>Mon dépôt</h2>
