@@ -10,37 +10,52 @@ export default function Connexion() {
     e.preventDefault();
     setErreur("");
     const adresse = email.trim().toLowerCase();
-    if (!/@([a-z0-9-]+\.)*ucac-icam\.com$/.test(adresse)) {
-      return setErreur("Utilise ton adresse de l'école (…@ucac-icam.com).");
-    }
+    if (!/@([a-z0-9-]+\.)*ucac-icam\.com$/.test(adresse)) return setErreur("Il faut ton adresse de l'école, en …@ucac-icam.com.");
     setEtat("envoi");
     const { error } = await supabase.auth.signInWithOtp({
-      email: adresse,
-      options: { emailRedirectTo: window.location.origin + window.location.pathname },
+      email: adresse, options: { emailRedirectTo: window.location.origin + window.location.pathname },
     });
-    if (error) { setEtat("saisie"); setErreur("L'envoi a échoué. Réessaie dans une minute."); }
+    if (error) { setEtat("saisie"); setErreur("L'envoi n'est pas passé. Réessaie dans une minute."); }
     else setEtat("envoye");
   };
 
   return (
-    <div className="accueil">
-      <div className="carte connexion">
-        <div className="logo grand">CER<span>tain</span></div>
-        <p className="accroche">Ton CER de prosit rédigé avec ton groupe et déposé à temps sur Moodle. Tu es prévenu la veille, tu peux toujours annuler.</p>
+    <div className="ouverture">
+      <section className="gauche">
+        <div className="marque">CER<i>tain</i></div>
+        <div>
+          <h1>Le CER rendu, <em>sans y penser.</em></h1>
+          <p className="doux" style={{ marginTop: "1.2rem" }}>Pour les prosits de l'Ucac-Icam.</p>
+        </div>
+        <ol>
+          <li>CERtain lit tes devoirs sur Moodle et repère les CER à rendre.</li>
+          <li>Il rédige le compte rendu de ton groupe, à ton nom et dans ton style.</li>
+          <li>La veille, tu es prévenu. Sans réponse de ta part, il le dépose à temps.</li>
+        </ol>
+      </section>
+      <section className="droite">
         {etat === "envoye" ? (
-          <div className="info">Lien de connexion envoyé à <b>{email}</b>. Ouvre-le depuis cet appareil.</div>
+          <div>
+            <span className="meta">Vérifie ta boîte</span>
+            <h2 style={{ margin: ".6rem 0 1rem" }}>Un lien vient de partir vers <em>{email}</em>.</h2>
+            <p className="doux">Ouvre-le depuis ce navigateur. Pense aux courriers indésirables : il vient de noreply@mail.app.supabase.io.</p>
+            <button className="lien" onClick={() => setEtat("saisie")}>Changer d'adresse</button>
+          </div>
         ) : (
           <form onSubmit={envoyer}>
-            <label htmlFor="email">Adresse de l'école</label>
-            <input id="email" type="email" autoComplete="email" placeholder="prenom.nom@2029.ucac-icam.com"
-              value={email} onChange={(e) => setEmail(e.target.value)} required />
-            {erreur && <div className="erreur">{erreur}</div>}
-            <button className="principal" disabled={etat === "envoi"}>
-              {etat === "envoi" ? "Envoi…" : "Recevoir mon lien de connexion"}
-            </button>
+            <div>
+              <span className="meta">Connexion</span>
+              <h2 style={{ marginTop: ".6rem" }}>Pas de mot de passe : un lien par e‑mail.</h2>
+            </div>
+            <label>Adresse de l'école
+              <input type="email" autoComplete="email" placeholder="prenom.nom@2029.ucac-icam.com"
+                value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </label>
+            {erreur && <small className="erreur">{erreur}</small>}
+            <div><button className="btn" disabled={etat === "envoi"}>{etat === "envoi" ? "Envoi…" : "Recevoir mon lien"}</button></div>
           </form>
         )}
-      </div>
+      </section>
     </div>
   );
 }

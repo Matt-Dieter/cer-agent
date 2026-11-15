@@ -12,12 +12,12 @@ export type Theme = {
 };
 export type Etudiant = {
   id: string; email: string; nom: string; prenoms: string; groupe: string;
-  theme: Theme; moodle_relie: boolean;
+  theme: Theme; moodle_relie: boolean; auto: boolean;
 };
 export type Prosit = {
   id: string; createur_id: string; numero: number; notion: string; cours: string;
   cmid: number | null; groupe: string; annee: string; echeance: string | null;
-  statut: string; a_relire: string[];
+  statut: string; a_relire: string[]; source: "manuel" | "moodle";
 };
 export type Membre = {
   prosit_id: string; etudiant_id: string; invitation: "invite" | "accepte" | "refuse";
@@ -25,14 +25,28 @@ export type Membre = {
 };
 
 export const STATUTS: Record<string, string> = {
-  brouillon: "Brouillon",
-  en_attente: "Prêt à rédiger",
+  brouillon: "En attente des documents",
+  en_attente: "Rédaction programmée",
   en_redaction: "Rédaction en cours",
-  pret: "CER prêt, dépôt programmé",
+  pret: "Prêt · dépôt programmé",
   depose: "Déposé sur Moodle",
   a_relire: "À relire",
   erreur: "Erreur",
 };
+export const TON: Record<string, string> = {
+  brouillon: "", en_attente: "vif", en_redaction: "vif", pret: "vif", depose: "ok", a_relire: "attention", erreur: "alerte",
+};
+export function dateCourte(iso: string | null) {
+  if (!iso) return "sans échéance";
+  return new Date(iso).toLocaleString("fr-FR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+export function delai(iso: string | null) {
+  if (!iso) return "";
+  const h = Math.round((new Date(iso).getTime() - Date.now()) / 3600_000);
+  if (h < 0) return "échéance passée";
+  if (h < 24) return `dans ${h} h`;
+  return `dans ${Math.round(h / 24)} j`;
+}
 
 export function anneeCourante() {
   const d = new Date();

@@ -25,32 +25,35 @@ export default function App() {
   };
   useEffect(() => { recharger(); }, [session?.user.id]);
 
-  if (session === undefined) return <div className="chargement">Chargement…</div>;
+  if (session === undefined) return <div className="chargement">un instant…</div>;
   if (!session) return <Connexion />;
-  if (!moi) return <div className="chargement">Chargement de ton profil…</div>;
+  if (!moi) return <div className="chargement">ouverture de ton espace…</div>;
 
-  const profilIncomplet = !moi.nom || !moi.prenoms || !moi.moodle_relie;
+  const incomplet = !moi.nom || !moi.prenoms || !moi.moodle_relie;
 
   return (
     <div className="app">
       <header className="barre">
-        <Link to="/" className="logo">CER<span>tain</span></Link>
+        <Link to="/" className="marque">CER<i>tain</i></Link>
         <nav>
-          <NavLink to="/" end>Mes prosits</NavLink>
-          <NavLink to="/profil">Mon profil{profilIncomplet && <span className="pastille" aria-label="à compléter" />}</NavLink>
-          <button className="lien" onClick={() => supabase.auth.signOut()}>Déconnexion</button>
+          <NavLink to="/" end>Prosits</NavLink>
+          <NavLink to="/profil">Profil{incomplet && <span className="point" aria-label="à compléter" />}</NavLink>
+          <button onClick={() => supabase.auth.signOut()}>Sortir</button>
         </nav>
       </header>
       <main>
         <Routes>
-          <Route path="/" element={profilIncomplet ? <Navigate to="/profil" replace /> : <Prosits moi={moi} />} />
+          <Route path="/" element={incomplet ? <Navigate to="/profil" replace /> : <Prosits moi={moi} />} />
           <Route path="/profil" element={<Profil moi={moi} onChange={recharger} />} />
           <Route path="/prosits/nouveau" element={<NouveauProsit moi={moi} />} />
           <Route path="/prosits/:id" element={<PrositDetail moi={moi} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <footer className="pied">CERtain · projet étudiant Ucac-Icam · tes identifiants Moodle ne sont jamais conservés</footer>
+      <footer className="pied">
+        <span>CERtain — projet étudiant, Ucac-Icam</span>
+        <span>Ton mot de passe Moodle n'est jamais conservé</span>
+      </footer>
     </div>
   );
 }
