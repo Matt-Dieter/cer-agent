@@ -55,7 +55,7 @@ def a_rediger():
         dossier.mkdir(parents=True, exist_ok=True)
         objets = appel("POST", "/storage/v1/object/list/prosits", {"prefix": pid, "limit": 100})
         for o in objets or []:
-            if o["name"].split(".")[0] in ("enonce", "aller", "retour"):
+            if o["name"].split(".")[0] in ("enonce", "aller", "retour") or o["name"].startswith("ressource_"):
                 contenu = appel("GET", f"/storage/v1/object/prosits/{pid}/{urllib.parse.quote(o['name'])}", brut=True)
                 (dossier / o["name"]).write_bytes(contenu)
         fiche = {
