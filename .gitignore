@@ -2,3 +2,4 @@ captures/
 __pycache__/
 *.docx
 .env
+travail/
