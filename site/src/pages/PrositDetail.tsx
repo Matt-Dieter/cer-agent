@@ -125,7 +125,7 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
       )}
       {moiM?.invitation === "accepte" && p.statut === "brouillon" && (
         <div className="encart">
-          <p>{doc("enonce") ? "La rédaction démarrera seule la veille de l'échéance. Pressé ? Lance-la maintenant : ton CER sera rédigé dans l'heure, puis déposé aussitôt. Ajoute l'aller et le retour avant si tu les as." : "Ajoute au moins l'énoncé pour que la rédaction puisse démarrer."}</p>
+          <p>{doc("enonce") ? "La rédaction démarrera seule la veille de l'échéance. Pressé ? Lance-la maintenant : elle partira au prochain passage (12h43 ou 21h43), puis le CER sera déposé aussitôt. Ajoute l'aller et le retour avant si tu les as." : "Ajoute au moins l'énoncé pour que la rédaction puisse démarrer."}</p>
           <button className="btn" disabled={!doc("enonce")} onClick={() => action("lancer")}>Rédiger maintenant</button>
         </div>
       )}
