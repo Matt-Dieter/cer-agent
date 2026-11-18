@@ -21,6 +21,8 @@ export default function Connexion() {
       // Le refus de la liste d'accès remonte comme une erreur de base de données à l'inscription
       setErreur(/database|saving new user|autoris/i.test(error.message)
         ? "Cette adresse n'est pas encore autorisée sur CERtain. Demande l'accès à l'administrateur."
+        : error.status === 429 || /rate limit/i.test(error.message)
+        ? "Trop de liens envoyés en peu de temps. Réessaie dans une heure, ou utilise le dernier lien reçu s'il date de moins d'une heure."
         : "L'envoi n'est pas passé. Réessaie dans une minute.");
     }
     else setEtat("envoye");
