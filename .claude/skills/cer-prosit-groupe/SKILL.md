@@ -39,7 +39,7 @@ Règles pour le retour :
 
 ## Structure imposée
 
-Page de garde : « CER PROSIT N », sujet, sous-titre éventuel, rédigé par (le membre de cette version), groupe, année académique, établissement. Une ligne « Membres du groupe : … » liste tous les membres.
+Page de garde : « CER PROSIT N », sujet, sous-titre éventuel, puis seulement trois lignes : Rédigé par (le membre de cette version), Année académique, Établissement. **Jamais** de ligne « Groupe » ni « Membres du groupe », quel que soit le style de garde.
 
 **I. RAPPEL DU PROSIT ALLER** — 1. Mots clés (8 à 14, chacun défini en une ligne) · 2. Contexte (3 à 5 phrases) · 3. Besoins · 4. Problématique (une question, en encadré) · 5. Contraintes · 6. Généralisation (une ligne) · 7. Pistes de solution (3 à 4, formulées comme des questions discutables) · 8. Plan d'action (5 à 8 étapes, verbes à l'infinitif).
 
@@ -63,25 +63,46 @@ Page de garde : « CER PROSIT N », sujet, sous-titre éventuel, rédigé par (l
    - **Rédaction propre à chaque membre** : reformuler les parties II, III et la conclusion (tournures, ordre des phrases, exemples concrets choisis parmi ceux qu'appuient les sources), sans ajouter d'affirmation non sourcée ni changer un verdict. Les définitions de la partie I peuvent rester proches.
    - **Thème propre à chaque membre** : appliquer `theme` (voir « Thèmes »).
    - Nom de fichier : `CER_Prosit_<N>_<NOM>_<Prenom>.docx` (sans accents ni espaces).
+   - Les trois styles de garde (bandeau, sobre, colonne) ont le même tableau de trois lignes : Rédigé par, Année académique, Établissement.
 7. **Vérifier** avec la grille, corriger, revérifier.
 8. **Livrer** dans le dossier du prosit : les .docx par membre, et `livraison.json` : `{"statut": "pret" | "a-relire", "fichiers": {"<id_etudiant>": "<nom de fichier>"}, "a_relire": ["…"], "sources": N}`. Le dépôt sur Moodle et les messages WhatsApp sont faits par le service, pas par ce skill.
 
-## Thèmes
+## Thèmes (personnalisation propre à chaque membre)
 
-`theme` (choisi par l'étudiant sur le site) : `{"police": "Calibri", "couleur_principale": "2F3437", "couleur_accent": "0F766E", "garde": "bandeau" | "sobre" | "colonne"}`.
-- Sans `theme` : appliquer le thème par défaut ci-dessous (anthracite + pétrole, garde « bandeau »).
-- Polices autorisées : Calibri, Cambria, Georgia, Arial, Segoe UI, Garamond. Toute autre valeur → Calibri.
-- Couleurs : hexadécimal à 6 chiffres. Refuser (et prendre le défaut) une couleur trop claire pour du texte sur blanc (contraste inférieur à 4,5:1) ; les teintes claires dérivées (encadré, ligne alternée) sont calculées à partir de l'accent (environ 90 % vers le blanc).
-- Couleurs des verdicts fixes pour tous (vert 4D7C0F, orange B45309, rouge B91C1C) pour rester lisibles.
-- Gardes : « bandeau » = bandeau pleine largeur décrit ci-dessous ; « sobre » = fond blanc, titre en couleur principale, filet accent ; « colonne » = bande verticale accent à gauche sur toute la hauteur.
-- Tout le reste de la charte (mise en page, titres, tableaux, légendes, en-têtes) reste commun.
+`theme` vient du profil de l'étudiant sur le site. **Seule la forme change ; l'ordre et le contenu des parties restent ceux de la structure imposée.** Toute valeur absente ou inconnue prend la valeur par défaut (entre crochets), qui reproduit la charte ci-dessous.
+
+| Clé | Valeurs | Rendu attendu |
+|---|---|---|
+| `police` | Calibri, Cambria, Georgia, Garamond, Times New Roman, Book Antiqua, Arial, Segoe UI, Lato, Century Gothic [Calibri] | Police du texte courant, des tableaux et des légendes. |
+| `police_titres` | même liste [= `police`] | Titres 1/2/3, titre de la garde, sommaire. |
+| `taille` | 10.5, 11, 12 [11] | Taille du texte courant (tableaux : taille − 1,5 pt). |
+| `interligne` | 1, 1.15, 1.5 [1.15] | Interligne du texte courant. |
+| `couleur_principale`, `couleur_accent` | hexadécimal 6 chiffres [2F3437, 0F766E] | Refuser (prendre le défaut) une couleur au contraste < 4,5:1 sur blanc. Teintes claires (encadré, ligne alternée) = accent mélangé à ~88 % de blanc. |
+| `garde` | bandeau, sobre, colonne, centree, cadre, moderne [bandeau] | voir « Formes de garde ». |
+| `titres` | filet, numero, bande, capitales, simple [filet] | **filet** : Titre 1 gras couleur principale + filet accent dessous. **numero** : numéro de partie en grand (28 pt, accent) à gauche du titre. **bande** : Titre 1 sur fond teinté pleine largeur. **capitales** : petites capitales espacées (+1,5 pt d'espacement). **simple** : gras, sans décor. |
+| `numerotation` | romain, decimal, aucune [romain] | **romain** : I. / 1. / 1.1. **decimal** : 1. / 1.1 / 1.1.1 (les parties I, II, III deviennent 1, 2, 3). **aucune** : titres sans numéros (le plan d'action garde ses numéros d'étapes dans la liste, pas dans les titres). |
+| `tableaux` | raye, grille, lignes, minimal [raye] | **raye** : en-tête plein couleur principale, une ligne sur deux teintée. **grille** : toutes les bordures fines. **lignes** : filets horizontaux seulement. **minimal** : en-tête texte couleur principale souligné, aucune autre bordure. |
+| `encadres` | barre, fond, cadre [barre] | Problématique et pistes : **barre** épaisse accent à gauche + fond teinté, **fond** teinté seul, **cadre** contour fin accent. |
+| `sommaire` | true, false [false] | true : page « Sommaire » juste après la garde, vrai champ TOC Word (niveaux 1-2) mis à jour, avec points de suite. |
+| `pagination` | page_sur, numero, tiret, aucune [page_sur] | Pied centré : « Page X / Y » (PAGE, NUMPAGES), « X », « — X — », ou rien. Jamais sur la garde. |
+| `entete` | complet, titre, aucun [complet] | **complet** : « CER Prosit N — Sujet » à gauche, « Prénom NOM » à droite. **titre** : partie gauche seule. **aucun** : pas d'en-tête. Jamais sur la garde. |
+| `marges` | etroites, normales, larges [normales] | 1,8 cm, 2,2 cm, 2,6 cm. |
+
+### Formes de garde
+Toutes ont exactement trois informations en bas ou au centre : **Rédigé par**, **Année académique**, **Établissement**. Jamais « Groupe » ni « Membres du groupe ».
+- **bandeau** : ligne du haut « Ucac-Icam · Année académique AAAA/AAAA » soulignée ; bandeau couleur principale pleine largeur avec « COMPTE RENDU » (10,5 pt, accent éclairci), « CER PROSIT N » (34 pt gras blanc), sujet (18 pt gras blanc) ; tableau d'infos sans bordures verticales en bas.
+- **sobre** : même structure sur fond blanc, titre en couleur principale, filet accent épais sous le bloc titre.
+- **colonne** : bande verticale accent (1,5 cm) sur toute la hauteur à gauche, contenu décalé, titre en couleur principale.
+- **centree** : tout centré, « UCAC-ICAM » en petites capitales en haut, bloc titre entre deux filets accent au milieu de la page, infos centrées en bas (« Rédigé par : … » sur trois lignes).
+- **cadre** : double filet (couleur principale + accent) encadrant la page à 1 cm des bords, contenu centré comme « centree ».
+- **moderne** : numéro du prosit en très grand (120 pt, accent très éclairci) en haut à gauche, bloc titre chevauchant le bas du numéro avec une barre accent à gauche, infos en bas.
 
 ## Charte graphique (thème par défaut)
 
 - A4, marges 2,2 cm. Calibri 11, justifié, interligne 1,15, 6 pt après. Texte 262626.
 - Palette : anthracite 2F3437, pétrole 0F766E, lignes D5DADB, ligne alternée F4F6F6, encadré E7F3F1, gris 6B7275. Verdicts : vert 4D7C0F, orange B45309, rouge B91C1C. **Aucun bleu**, y compris dans les styles et le thème.
-- Garde : ligne du haut « Ucac-Icam · Année académique AAAA/AAAA » soulignée ; bandeau anthracite pleine largeur avec « COMPTE RENDU » (10,5 pt, 7DD3C8), « CER PROSIT N » (34 pt gras blanc), sujet (18 pt gras blanc), sous-titre (13 pt italique D9DFE0) ; en bas, tableau sans bordures verticales Rédigé par / Membres / Groupe / Année / Établissement.
-- Pages suivantes : en-tête « CER Prosit N — Sujet » à gauche (gras), « Prénom NOM · Groupe » à droite, filet dessous ; pied « Page X / Y » centré. Pas d'en-tête sur la garde.
+- Garde : ligne du haut « Ucac-Icam · Année académique AAAA/AAAA » soulignée ; bandeau anthracite pleine largeur avec « COMPTE RENDU » (10,5 pt, 7DD3C8), « CER PROSIT N » (34 pt gras blanc), sujet (18 pt gras blanc), sous-titre (13 pt italique D9DFE0) ; en bas, tableau sans bordures verticales Rédigé par / Année académique / Établissement (rien d'autre).
+- Pages suivantes : en-tête « CER Prosit N — Sujet » à gauche (gras), « Prénom NOM » à droite, filet dessous ; pied « Page X / Y » centré. Pas d'en-tête sur la garde.
 - Titres : styles Titre 1/2/3 (17 pt gras anthracite + filet pétrole + saut de page avant I, II, III ; 13,5 pt gras pétrole ; 11,5 pt gras anthracite), liés au paragraphe suivant.
 - Listes : vraie numérotation Word, puces et numéros pétrole, repart à 1 à chaque liste.
 - Tableaux : pleine largeur, en-tête anthracite texte blanc gras 9,5 pt répété, lignes alternées, première colonne en gras, texte 9,5 pt ; tableaux de 12 lignes ou moins jamais coupés, aucune ligne coupée.
@@ -102,5 +123,5 @@ Pièges : les modèles python-docx contiennent des bleus cachés (styles, thème
 6. Chaque sigle est expliqué à sa première apparition.
 7. Tous les tableaux sont numérotés, légendés et cités.
 8. Rendu regardé page par page (PDF puis images) : garde correcte, aucun bleu, en-tête et pied dès la page 2 ; le validateur docx passe.
-9. Une version par membre de `prosit.json` : bon nom sur la garde, dans l'en-tête et les propriétés ; thème du membre appliqué ; rédaction différente d'une version à l'autre (aucun paragraphe de II ou III identique) ; mêmes pistes, verdicts, sources et chiffres dans toutes les versions.
+9. Une version par membre de `prosit.json` : bon nom sur la garde, dans l'en-tête et les propriétés ; garde sans ligne « Groupe » ni « Membres du groupe » ; **chaque clé du `theme` du membre visiblement appliquée** (garde, titres, numérotation, tableaux, encadrés, sommaire, pagination, en-tête, marges, polices) ; thème du membre appliqué ; rédaction différente d'une version à l'autre (aucun paragraphe de II ou III identique) ; mêmes pistes, verdicts, sources et chiffres dans toutes les versions.
 10. Corrections du tuteur intégrées ; écarts avec le retour listés dans `a_relire`.

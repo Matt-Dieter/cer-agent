@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { supabase, anneeCourante, type Etudiant, type Theme } from "../supabase";
-import { GARDES, PALETTES, POLICES, complet, couleurValide } from "../theme";
-import ApercuGarde from "../ApercuGarde";
+import { supabase, anneeCourante, type Etudiant } from "../supabase";
+import { complet, type ThemeComplet } from "../theme";
+import Style from "../Style";
 
 export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () => void }) {
   const [nom, setNom] = useState(moi.nom);
   const [prenoms, setPrenoms] = useState(moi.prenoms);
   const [groupe, setGroupe] = useState(moi.groupe);
   const [auto, setAuto] = useState(moi.auto);
-  const [theme, setTheme] = useState<Required<Theme>>(complet(moi.theme));
+  const [theme, setTheme] = useState<ThemeComplet>(complet(moi.theme));
   const [msg, setMsg] = useState("");
 
   const enregistrer = async (e?: React.FormEvent) => {
@@ -50,62 +50,17 @@ export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () 
             Suivre seul les CER à rendre sur Moodle
           </label>
           <p className="doux" style={{ fontSize: ".9rem", marginTop: ".8rem" }}>
-            {auto ? "Chaque heure, CERtain lit tes cours de prosit. Un nouveau dépôt de CER ? Il crée le prosit, importe l'énoncé, lance la rédaction la veille et dépose quelques heures avant l'échéance. Tu peux toujours annuler."
+            {auto ? "Chaque heure, CERtain lit tes cours de prosit. Un nouveau dépôt de CER ? Il crée le prosit, importe l'énoncé, lance la rédaction la veille de l'échéance et dépose ton CER dès qu'il est prêt. Tu relis ensuite et tu peux le remplacer."
               : "CERtain ne crée rien seul. Utilise « Actualiser depuis Moodle » sur la page des prosits."}
           </p>
         </div>
       </section>
 
-      <section className="bloc">
-        <header><span className="meta">04</span><h2>Ton style</h2><p>Ton CER sort à ton image. Le fond reste celui du groupe, rédigé à ta façon.</p></header>
-        <div className="theme">
-          <div>
-            <span className="meta" style={{ display: "block", marginBottom: ".7rem" }}>Palette</span>
-            <div className="nuancier">
-              {PALETTES.map((p) => (
-                <button type="button" key={p.nom} className="nuance"
-                  aria-pressed={p.principale === theme.couleur_principale && p.accent === theme.couleur_accent}
-                  onClick={() => setTheme({ ...theme, couleur_principale: p.principale, couleur_accent: p.accent })}>
-                  <span className="bandes"><span style={{ background: `#${p.principale}` }} /><span style={{ background: `#${p.accent}` }} /></span>
-                  {p.nom}
-                </button>
-              ))}
-            </div>
-            <div className="couleurs">
-              <Couleur label="Principale" valeur={theme.couleur_principale} onChange={(v) => setTheme({ ...theme, couleur_principale: v })} />
-              <Couleur label="Accent" valeur={theme.couleur_accent} onChange={(v) => setTheme({ ...theme, couleur_accent: v })} />
-            </div>
-            <label style={{ marginBottom: "1.6rem" }}>Police du document
-              <select value={theme.police} onChange={(e) => setTheme({ ...theme, police: e.target.value })}>
-                {POLICES.map((p) => <option key={p}>{p}</option>)}
-              </select>
-            </label>
-            <span className="meta" style={{ display: "block", marginBottom: ".7rem" }}>Page de garde</span>
-            <div className="choix">
-              {GARDES.map((g) => (
-                <button type="button" key={g.id} aria-pressed={theme.garde === g.id} onClick={() => setTheme({ ...theme, garde: g.id })}>{g.nom}</button>
-              ))}
-            </div>
-          </div>
-          <ApercuGarde theme={theme} nom={`${prenoms} ${nom.toUpperCase()}`.trim()} groupe={groupe} annee={anneeCourante()} />
-        </div>
+      <section className="bloc bloc-large">
+        <header><span className="meta">04</span><h2>Ton style</h2><p>La forme de ton CER, de la garde aux numéros de page. Le fond reste celui du groupe, rédigé à ta façon.</p></header>
+        <Style theme={theme} onChange={setTheme} nom={`${prenoms} ${nom.toUpperCase()}`.trim()} annee={anneeCourante()} />
       </section>
     </div>
-  );
-}
-
-function Couleur({ label, valeur, onChange }: { label: string; valeur: string; onChange: (v: string) => void }) {
-  const [texte, setTexte] = useState(valeur);
-  const ok = couleurValide(texte);
-  const poser = (v: string) => { setTexte(v); if (couleurValide(v)) onChange(v); };
-  return (
-    <label>{label}
-      <span className="couleur">
-        <input type="color" value={`#${valeur}`} onChange={(e) => poser(e.target.value.slice(1).toUpperCase())} aria-label={`${label}, sélecteur`} />
-        <input type="text" value={texte} maxLength={6} onChange={(e) => poser(e.target.value.replace("#", "").toUpperCase())} aria-invalid={!ok} />
-      </span>
-      {!ok && <small className="erreur">Trop clair pour être lu sur une page blanche.</small>}
-    </label>
   );
 }
 

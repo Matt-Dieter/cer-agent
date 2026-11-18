@@ -9,6 +9,7 @@ Ce script n'a jamais la clé : il envoie une valeur factice que le proxy remplac
 Aucun jeton Moodle n'est lu ici : le dépôt est fait par la fonction serveur « deposer ».
 """
 import json
+from datetime import datetime, timezone
 import sys
 import urllib.parse
 import urllib.request
@@ -79,7 +80,9 @@ def livrer(dossier):
         appel("POST", f"/storage/v1/object/prosits/{urllib.parse.quote(chemin)}", (dossier / nom_fichier).read_bytes(),
               {"Content-Type": DOCX, "x-upsert": "true"})
         rest("PATCH", "prosit_membres", f"?prosit_id=eq.{pid}&etudiant_id=eq.{etudiant}",
-             {"fichier": chemin, "depot_statut": "CER prêt"})
+             {"fichier": chemin, "depot_statut": "CER prêt",
+              "fichier_maj_le": datetime.now(timezone.utc).isoformat()})
+    # Dépôt d'abord, relecture ensuite : « a_relire » part aussi sur Moodle tout de suite
     statut = "pret" if liv.get("statut") == "pret" else "a_relire"
     rest("PATCH", "prosits", f"?id=eq.{pid}", {"statut": statut, "a_relire": liv.get("a_relire", [])})
     print(f"Prosit {fiche['numero']} : {len(liv.get('fichiers', {}))} CER envoyés, statut « {statut} ».")

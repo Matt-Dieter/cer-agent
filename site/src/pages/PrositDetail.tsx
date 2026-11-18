@@ -18,6 +18,7 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
   const [docs, setDocs] = useState<string[]>([]);
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
+  const [envoi, setEnvoi] = useState(false);
 
   const charger = async () => {
     const [{ data: pr }, { data: mb }, { data: fichiers }] = await Promise.all([
@@ -58,6 +59,17 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
     const { error } = await supabase.from("prosit_membres").insert({ prosit_id: id, etudiant_id: c.id });
     setMsg(error ? "Déjà membre, ou invitation impossible." : `${c.prenoms || email} est invité·e.`); setEmail(""); charger();
   };
+  const remplacer = async (f: File) => {
+    setEnvoi(true); setMsg("");
+    const form = new FormData(); form.append("prosit", id!); form.append("fichier", f);
+    const { error } = await supabase.functions.invoke("remplacer-cer", { body: form });
+    setEnvoi(false);
+    if (error) {
+      const corps = await (error as { context?: Response }).context?.json?.().catch(() => null);
+      setMsg(corps?.erreur ?? "Le remplacement n'est pas passé.");
+    } else setMsg("Version corrigée reçue : elle part sur Moodle dans la minute.");
+    charger();
+  };
   const repondre = async (champs: Partial<Membre>) => {
     await supabase.from("prosit_membres").update(champs).eq("prosit_id", id).eq("etudiant_id", moi.id); charger();
   };
@@ -96,10 +108,10 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
           </div>
         </div>
       )}
-      {createur && (p.statut === "a_relire" || p.statut === "erreur") && (
+      {(p.statut === "a_relire" || (createur && p.statut === "erreur")) && (
         <div className="encart">
-          <p>{p.statut === "a_relire" ? "Les CER sont prêts, avec quelques points à vérifier plus bas." : "La rédaction n'a pas abouti. Vérifie les documents, puis relance."}</p>
-          <button className="btn" onClick={() => action("valider")}>{p.statut === "a_relire" ? "Valider et programmer le dépôt" : "Relancer"}</button>
+          <p>{p.statut === "a_relire" ? "Les CER partent sur Moodle. Quelques points sont à relire plus bas : corrige si besoin et remplace ta version." : "La rédaction n'a pas abouti. Vérifie les documents, puis relance."}</p>
+          {p.statut === "erreur" && <button className="btn" onClick={() => action("valider")}>Relancer</button>}
         </div>
       )}
       {createur && p.statut === "brouillon" && (
@@ -118,10 +130,19 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
             ) : moiM.annule ? (
               <p>Tu as annulé : CERtain ne déposera rien pour toi. <button className="lien" onClick={() => repondre({ annule: false })}>Réactiver</button></p>
             ) : (
-              <p>Ton CER partira seul sur Moodle quelques heures avant l'échéance. Tu seras prévenu la veille. <button className="lien" onClick={() => repondre({ annule: true })}>Annuler mon dépôt</button></p>
+              <p>Ton CER part seul sur Moodle dès qu'il est rédigé. Tu pourras le relire et le remplacer ensuite. <button className="lien" onClick={() => repondre({ annule: true })}>Ne pas déposer pour moi</button></p>
             )}
             {moiM.depot_statut && !moiM.depose_le && <p className="mono">{moiM.depot_statut}</p>}
-            {moiM.fichier && <button className="btn clair" onClick={() => ouvrirChemin(moiM.fichier!)}>Télécharger mon CER</button>}
+            {moiM.fichier && (
+              <div className="actions">
+                <button className="btn clair" onClick={() => ouvrirChemin(moiM.fichier!)}>Télécharger mon CER</button>
+                <label className="btn clair" style={{ flexDirection: "row", color: "var(--encre)", fontSize: ".9rem" }}>
+                  {envoi ? "Envoi…" : "Remplacer par ma version corrigée"}
+                  <input type="file" hidden accept=".docx" disabled={envoi} onChange={(e) => e.target.files?.[0] && remplacer(e.target.files[0])} />
+                </label>
+              </div>
+            )}
+            {moiM.fichier && <p className="doux" style={{ fontSize: ".85rem" }}>Relis, corrige dans Word, puis renvoie le fichier : il remplace aussitôt ton dépôt sur Moodle.</p>}
             {p.a_relire?.length > 0 && <>
               <h3>Points à relire</h3>
               <ul className="lignes">{p.a_relire.map((x, i) => <li key={i}>{x}</li>)}</ul>

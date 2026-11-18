@@ -8,6 +8,7 @@ import NouveauProsit from "./pages/NouveauProsit";
 import PrositDetail from "./pages/PrositDetail";
 import Profil from "./pages/Profil";
 import Themes from "./Themes";
+import Acces from "./pages/Acces";
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -29,6 +30,13 @@ export default function App() {
   if (session === undefined) return <div className="chargement">un instant…</div>;
   if (!session) return <Connexion />;
   if (!moi) return <div className="chargement">ouverture de ton espace…</div>;
+  if (!moi.actif) return (
+    <div className="chargement" style={{ textAlign: "center", padding: "2rem" }}>
+      <div><h2>Ton accès à CERtain a été retiré.</h2>
+        <p className="doux">Demande à l'administrateur de te réautoriser.</p>
+        <button className="lien" onClick={() => supabase.auth.signOut()}>Se déconnecter</button></div>
+    </div>
+  );
 
   const incomplet = !moi.nom || !moi.prenoms || !moi.moodle_relie;
 
@@ -39,6 +47,7 @@ export default function App() {
         <nav>
           <NavLink to="/" end>Prosits</NavLink>
           <NavLink to="/profil">Profil{incomplet && <span className="point" aria-label="à compléter" />}</NavLink>
+          {moi.role === "admin" && <NavLink to="/acces">Accès</NavLink>}
           <button onClick={() => supabase.auth.signOut()}>Sortir</button>
           <Themes />
         </nav>
@@ -49,6 +58,7 @@ export default function App() {
           <Route path="/profil" element={<Profil moi={moi} onChange={recharger} />} />
           <Route path="/prosits/nouveau" element={<NouveauProsit moi={moi} />} />
           <Route path="/prosits/:id" element={<PrositDetail moi={moi} />} />
+          {moi.role === "admin" && <Route path="/acces" element={<Acces />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

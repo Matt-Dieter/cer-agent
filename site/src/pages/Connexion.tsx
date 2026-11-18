@@ -16,7 +16,13 @@ export default function Connexion() {
     const { error } = await supabase.auth.signInWithOtp({
       email: adresse, options: { emailRedirectTo: window.location.origin + window.location.pathname },
     });
-    if (error) { setEtat("saisie"); setErreur("L'envoi n'est pas passé. Réessaie dans une minute."); }
+    if (error) {
+      setEtat("saisie");
+      // Le refus de la liste d'accès remonte comme une erreur de base de données à l'inscription
+      setErreur(/database|saving new user|autoris/i.test(error.message)
+        ? "Cette adresse n'est pas encore autorisée sur CERtain. Demande l'accès à l'administrateur."
+        : "L'envoi n'est pas passé. Réessaie dans une minute.");
+    }
     else setEtat("envoye");
   };
 
@@ -32,7 +38,7 @@ export default function Connexion() {
         <ol>
           <li>CERtain lit tes devoirs sur Moodle et repère les CER à rendre.</li>
           <li>Il rédige le compte rendu de ton groupe, à ton nom et dans ton style.</li>
-          <li>La veille, tu es prévenu. Sans réponse de ta part, il le dépose à temps.</li>
+          <li>Il le dépose seul avant l'échéance. Tu relis ensuite, et tu peux le remplacer.</li>
         </ol>
       </section>
       <section className="droite">

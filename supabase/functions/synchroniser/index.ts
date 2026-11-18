@@ -7,6 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const MOODLE = "https://moodle.icam-afrique.com";
 const HORIZON_J = 21;        // devoirs dont l'échéance tombe dans les 21 prochains jours
+const RATTRAPAGE_J = 14;    // CER en retard repris s'ils peuvent encore être déposés
 const LANCEMENT_H = 30;      // rédaction lancée 30 h avant l'échéance
 const MAX_RESSOURCE = 10e6;  // 10 Mo par ressource, 3 ressources au plus
 const CORS = {
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
     cible = user.id;
   }
 
-  let q = admin.from("etudiants").select("id, groupe, auto").eq("moodle_relie", true);
+  let q = admin.from("etudiants").select("id, groupe, auto").eq("moodle_relie", true).eq("actif", true);
   q = cible ? q.eq("id", cible) : q.eq("auto", true);
   const { data: etudiants } = await q;
 
@@ -98,11 +99,19 @@ Deno.serve(async (req) => {
     catch (err) { resultat.push({ etudiant: e.id, erreur: String(err) }); continue; }
 
     for (const c of cours) {
-      const m = c.fullname.match(/prosit\s*0*(\d+)\s*[-–:]\s*(.+)$/i) ?? c.shortname.match(/-P0*(\d+)$/i);
+      // « Prosit 3 - Notion », « PROSIT 3 : Notion », « PR-4 Notion », code « GLOG461-P3 » ou « prosit4 »
+      const m = c.fullname.match(/pros?it\s*0*(\d+)\s*[-–:]\s*(.+)$/i)
+        ?? c.fullname.match(/^\s*pr\s*-?\s*0*(\d+)\s*[-–:]?\s*(.+)$/i)
+        ?? c.shortname.match(/(?:-P|prosit\s*-?|^pr\s*-?)0*(\d+)\s*$/i);
       if (!m) continue;
       for (const d of c.assignments) {
         if (!/cer|d[ée]p[oô]t/i.test(d.name)) continue;
-        if (!d.duedate || d.duedate < maintenant || d.duedate > maintenant + HORIZON_J * 86400) continue;
+        if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name)) continue;            // dépôt d'un autre campus
+        // deno-lint-ignore no-explicit-any
+        const dd = d as any;
+        if (dd.cutoffdate && dd.cutoffdate < maintenant) continue;         // devoir fermé
+        // À venir (21 j) ou en retard de moins de 14 j sur un devoir encore ouvert : on rattrape
+        if (!d.duedate || d.duedate < maintenant - RATTRAPAGE_J * 86400 || d.duedate > maintenant + HORIZON_J * 86400) continue;
 
         // Déjà suivi par cet étudiant ?
         const { data: deja } = await admin.from("prosit_membres").select("prosit_id, prosits!inner(cmid)")
