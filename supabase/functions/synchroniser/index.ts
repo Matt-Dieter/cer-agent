@@ -113,6 +113,10 @@ Deno.serve(async (req) => {
         // À venir (21 j) ou en retard de moins de 14 j sur un devoir encore ouvert : on rattrape
         if (!d.duedate || d.duedate < maintenant - RATTRAPAGE_J * 86400 || d.duedate > maintenant + HORIZON_J * 86400) continue;
 
+        // Supprimé par l'étudiant : ne jamais le recréer
+        const { data: ignore } = await admin.from("depots_ignores").select("cmid").eq("etudiant_id", e.id).eq("cmid", d.cmid);
+        if (ignore?.length) continue;
+
         // Déjà suivi par cet étudiant ?
         const { data: deja } = await admin.from("prosit_membres").select("prosit_id, prosits!inner(cmid)")
           .eq("etudiant_id", e.id).eq("prosits.cmid", d.cmid);

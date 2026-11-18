@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase, STATUTS, TON, dateCourte, delai, type Etudiant, type Membre, type Prosit } from "../supabase";
 
 type MembreNom = Membre & { etudiants: { nom: string; prenoms: string } | null };
@@ -13,6 +13,8 @@ const ETAPE: Record<string, number> = { brouillon: 0, en_attente: 1, en_redactio
 
 export default function PrositDetail({ moi }: { moi: Etudiant }) {
   const { id } = useParams();
+  const nav = useNavigate();
+  const [suppr, setSuppr] = useState<{ ouvert: boolean; moodle: boolean; envoi: boolean }>({ ouvert: false, moodle: true, envoi: false });
   const [p, setP] = useState<Prosit | null>(null);
   const [membres, setMembres] = useState<MembreNom[]>([]);
   const [docs, setDocs] = useState<string[]>([]);
@@ -70,11 +72,18 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
     } else setMsg("Version corrigée reçue : elle part sur Moodle dans la minute.");
     charger();
   };
+  const supprimer = async () => {
+    setSuppr({ ...suppr, envoi: true });
+    const { data, error } = await supabase.functions.invoke("supprimer-depot", { body: { prosit: id, retirer_moodle: suppr.moodle } });
+    if (error) { setSuppr({ ...suppr, envoi: false }); setMsg("La suppression n'est pas passée. Réessaie."); return; }
+    sessionStorage.setItem("certain-message", `Dépôt supprimé.${data?.moodle && data.moodle !== "non demandé" ? " " + data.moodle + "." : ""} CERtain ne le recréera pas.`);
+    nav("/");
+  };
   const repondre = async (champs: Partial<Membre>) => {
     await supabase.from("prosit_membres").update(champs).eq("prosit_id", id).eq("etudiant_id", moi.id); charger();
   };
   const action = async (rpc: "lancer" | "valider") => {
-    if (rpc === "lancer") await supabase.from("prosits").update({ statut: "en_attente" }).eq("id", id);
+    if (rpc === "lancer") await supabase.rpc("lancer_redaction", { p_prosit: id });
     else await supabase.rpc("valider_prosit", { p_prosit: id });
     charger();
   };
@@ -114,10 +123,10 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
           {p.statut === "erreur" && <button className="btn" onClick={() => action("valider")}>Relancer</button>}
         </div>
       )}
-      {createur && p.statut === "brouillon" && (
+      {moiM?.invitation === "accepte" && p.statut === "brouillon" && (
         <div className="encart">
-          <p>{doc("enonce") ? "La rédaction démarrera seule la veille de l'échéance. Ajoute l'aller et le retour du groupe avant, le CER sera bien meilleur." : "Ajoute au moins l'énoncé pour que la rédaction puisse démarrer."}</p>
-          <button className="btn clair" disabled={!doc("enonce")} onClick={() => action("lancer")}>Rédiger maintenant</button>
+          <p>{doc("enonce") ? "La rédaction démarrera seule la veille de l'échéance. Pressé ? Lance-la maintenant : ton CER sera rédigé dans l'heure, puis déposé aussitôt. Ajoute l'aller et le retour avant si tu les as." : "Ajoute au moins l'énoncé pour que la rédaction puisse démarrer."}</p>
+          <button className="btn" disabled={!doc("enonce")} onClick={() => action("lancer")}>Rédiger maintenant</button>
         </div>
       )}
 
@@ -195,6 +204,31 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
           )}
         </div>
       </section>
+      {moiM && (
+        <section className="bloc">
+          <header><span className="meta">04</span><h2>Supprimer</h2><p>Retire ce dépôt de ton espace. CERtain ne le recréera pas, même s'il revient sur Moodle.</p></header>
+          <div>
+            {!suppr.ouvert ? (
+              <button className="lien" style={{ color: "var(--alerte)" }} onClick={() => setSuppr({ ...suppr, ouvert: true })}>Supprimer ce dépôt…</button>
+            ) : (
+              <div className="encart" style={{ marginTop: 0, display: "grid", gap: "1rem" }}>
+                <p><b>Supprimer « {p.notion} » ?</b> {membres.filter((m) => m.invitation === "accepte").length > 1 ? "Tu quittes ce prosit ; tes camarades gardent le leur." : "Le prosit et ses documents seront effacés."}</p>
+                {moiM.depose_le && (
+                  <label className="interrupteur">
+                    <input type="checkbox" checked={suppr.moodle} onChange={(e) => setSuppr({ ...suppr, moodle: e.target.checked })} />
+                    Vider aussi ma remise sur Moodle (si le devoir est encore ouvert)
+                  </label>
+                )}
+                <div className="actions" style={{ marginTop: 0 }}>
+                  <button className="btn" style={{ background: "var(--alerte)", borderColor: "var(--alerte)" }} disabled={suppr.envoi} onClick={supprimer}>
+                    {suppr.envoi ? "Suppression…" : "Supprimer définitivement"}</button>
+                  <button className="lien" onClick={() => setSuppr({ ...suppr, ouvert: false })}>Annuler</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
       {msg && <div className="message">{msg}</div>}
     </div>
   );

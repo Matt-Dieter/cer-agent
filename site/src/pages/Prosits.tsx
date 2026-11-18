@@ -13,7 +13,11 @@ export default function Prosits({ moi }: { moi: Etudiant }) {
     setListe((data ?? []).map((m: Membre & { prosits: Prosit }) => ({ ...m.prosits, moi: m }))
       .sort((a, b) => (a.echeance ?? "9").localeCompare(b.echeance ?? "9")));
   };
-  useEffect(() => { charger(); }, [moi.id]);
+  useEffect(() => {
+    charger();
+    // Message laissé par une page précédente (ex. suppression d'un dépôt)
+    try { const m = sessionStorage.getItem("certain-message"); if (m) { setSynchro(m); sessionStorage.removeItem("certain-message"); } } catch { /* rien */ }
+  }, [moi.id]);
 
   const actualiser = async () => {
     setSynchro("encours");
