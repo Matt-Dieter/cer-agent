@@ -5,7 +5,18 @@ import Themes from "../Themes";
 export default function Connexion() {
   const [email, setEmail] = useState("");
   const [etat, setEtat] = useState<"saisie" | "envoi" | "envoye">("saisie");
-  const [erreur, setErreur] = useState("");
+  // Si le lien de l'e-mail a expiré ou a déjà servi, Supabase revient ici avec l'erreur dans l'adresse
+  const [erreur, setErreur] = useState(() => {
+    const h = new URLSearchParams(window.location.hash.replace(/^#\/?/, ""));
+    const code = h.get("error_code");
+    if (!code) return "";
+    history.replaceState(null, "", window.location.pathname);
+    return code === "otp_expired"
+      ? "Ce lien a expiré ou a déjà servi : un lien ne marche qu'une fois et pendant une heure. Demande un nouveau lien et ouvre le plus récent, ou saisis le code reçu."
+      : "La connexion par le lien n'a pas abouti. Demande un nouveau lien.";
+  });
+  const [code, setCode] = useState("");
+  const [verif, setVerif] = useState(false);
 
   const envoyer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +39,13 @@ export default function Connexion() {
     else setEtat("envoye");
   };
 
+  const verifier = async (e: React.FormEvent) => {
+    e.preventDefault(); setErreur(""); setVerif(true);
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: "email" });
+    setVerif(false);
+    if (error) setErreur("Code incorrect ou expiré. Vérifie les chiffres, ou demande un nouveau code.");
+  };
+
   return (
     <div className="ouverture">
       <Themes />
@@ -45,12 +63,22 @@ export default function Connexion() {
       </section>
       <section className="droite">
         {etat === "envoye" ? (
-          <div>
-            <span className="meta">Vérifie ta boîte</span>
-            <h2 style={{ margin: ".6rem 0 1rem" }}>Un lien vient de partir vers <em>{email}</em>.</h2>
-            <p className="doux">Ouvre-le depuis ce navigateur. Pense aux courriers indésirables : il vient de noreply@mail.app.supabase.io.</p>
-            <button className="lien" onClick={() => setEtat("saisie")}>Changer d'adresse</button>
-          </div>
+          <form onSubmit={verifier}>
+            <div>
+              <span className="meta">Vérifie ta boîte</span>
+              <h2 style={{ marginTop: ".6rem" }}>Un e-mail vient de partir vers <em>{email}</em>.</h2>
+            </div>
+            <p className="doux" style={{ margin: 0 }}>Clique sur le lien depuis ce navigateur, ou saisis ici le code reçu. Le lien et le code marchent une seule fois, pendant une heure. Regarde aussi les courriers indésirables.</p>
+            <label>Code reçu par e-mail
+              <input inputMode="numeric" autoComplete="one-time-code" maxLength={10} placeholder="123456"
+                value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
+            </label>
+            {erreur && <small className="erreur">{erreur}</small>}
+            <div style={{ display: "flex", gap: "1.2rem", alignItems: "center", flexWrap: "wrap" }}>
+              <button className="btn" disabled={code.length < 6 || verif}>{verif ? "Vérification…" : "Me connecter"}</button>
+              <button type="button" className="lien" onClick={() => { setEtat("saisie"); setCode(""); setErreur(""); }}>Renvoyer ou changer d'adresse</button>
+            </div>
+          </form>
         ) : (
           <form onSubmit={envoyer}>
             <div>
