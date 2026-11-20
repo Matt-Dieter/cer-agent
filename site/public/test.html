@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Test de connexion CERtain</title>
+<style>
+body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:16px;background:#f4f1ea;color:#1b1a17}
+@media(prefers-color-scheme:dark){body{background:#161614;color:#ece8df}}
+h1{font-size:1.3rem;margin:.2rem 0 1rem} li{margin:.5rem 0;list-style:none} ul{padding:0}
+.ok{color:#2e7d32}.lent{color:#b26a00}.ko{color:#c62828} pre{white-space:pre-wrap;background:rgba(128,128,128,.15);padding:10px;border-radius:6px;font-size:.85rem}
+button{font:inherit;padding:10px 16px;border-radius:6px;border:1px solid currentColor;background:none;color:inherit}
+</style></head><body>
+<h1>Test de connexion CERtain</h1>
+<p>Cette page est volontairement minuscule. Si tu la vois, ton réseau atteint bien GitHub Pages. Attends la fin des mesures (jusqu'à 30 s).</p>
+<ul id="r"></ul>
+<p><button id="b">Copier le résultat</button></p>
+<pre id="txt"></pre>
+<script>
+var lignes=[],dossier=location.pathname.replace(/[^\/]*$/,"");
+function ligne(nom,etat,detail){var li=document.createElement("li");li.innerHTML="<b>"+nom+"</b> : <span class='"+etat+"'>"+detail+"</span>";document.getElementById("r").appendChild(li);lignes.push(nom+" : "+detail);document.getElementById("txt").textContent=lignes.join("\n")}
+function mesure(nom,url,opts,limite){
+  var t0=performance.now(),c=new AbortController(),m=setTimeout(function(){c.abort()},limite||30000);
+  opts=opts||{};opts.signal=c.signal;opts.cache="no-store";
+  return fetch(url,opts).then(function(r){return r.arrayBuffer().then(function(b){
+    clearTimeout(m);var s=(performance.now()-t0)/1000;
+    ligne(nom,s<3?"ok":"lent",(s<3?"OK":"LENT")+" — "+s.toFixed(1)+" s, "+Math.round(b.byteLength/1024)+" Ko (réponse "+r.status+")");return new TextDecoder().decode(b)})})
+  .catch(function(e){clearTimeout(m);ligne(nom,"ko","ÉCHEC après "+((performance.now()-t0)/1000).toFixed(1)+" s ("+(e.name==="AbortError"?"aucune réponse en "+((limite||30000)/1000)+" s":e.message)+")");return ""});
+}
+var cn=navigator.connection;ligne("Réseau de l'appareil","ok",cn?(cn.effectiveType+", débit estimé "+cn.downlink+" Mb/s, latence "+cn.rtt+" ms"):"non indiqué par le navigateur");
+mesure("1. Page d'accueil du site",dossier).then(function(html){
+  var js=(html.match(/src="([^"]*\.js)"/)||[])[1],css=(html.match(/href="([^"]*\.css)"/)||[])[1];
+  var p=[];
+  if(css)p.push(mesure("2. Feuille de style du site",css));
+  if(js)p.push(mesure("3. Programme du site (le plus gros fichier)",js));
+  return Promise.all(p)}).then(function(){
+  return mesure("4. Police Lato (Google Fonts)","https://fonts.googleapis.com/css2?family=Lato:wght@400&display=swap",{},10000)}).then(function(){
+  return mesure("5. Base de données Supabase","https://wrzeqqlyeqmvmwxddkew.supabase.co/auth/v1/health",{headers:{apikey:"sb_publishable_0CJOjiWKHAOXvSpuJIclrA_uH2BdbY8"}},10000)}).then(function(){
+  ligne("Terminé","ok","envoie une capture de cette page, ou le texte copié.")});
+document.getElementById("b").onclick=function(){var t=lignes.join("\n");(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).catch(function(){var s=window.getSelection(),r=document.createRange();r.selectNodeContents(document.getElementById("txt"));s.removeAllRanges();s.addRange(r)})};
+</script></body></html>
