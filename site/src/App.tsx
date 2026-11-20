@@ -15,9 +15,11 @@ export default function App() {
   const [moi, setMoi] = useState<Etudiant | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    // Si la lecture de la session traîne (réseau lent ou verrou bloqué), on montre la page de connexion au lieu d'attendre sans fin
+    const delai = setTimeout(() => setSession((s) => (s === undefined ? null : s)), 5000);
+    supabase.auth.getSession().then(({ data }) => setSession(data.session)).catch(() => setSession(null));
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    return () => data.subscription.unsubscribe();
+    return () => { clearTimeout(delai); data.subscription.unsubscribe(); };
   }, []);
 
   const recharger = async () => {
