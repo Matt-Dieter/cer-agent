@@ -9,6 +9,7 @@ import PrositDetail from "./pages/PrositDetail";
 import Profil from "./pages/Profil";
 import Themes from "./Themes";
 import Acces from "./pages/Acces";
+import { Bandeau, PageAlertes, useAlertes } from "./Alertes";
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -40,6 +41,11 @@ export default function App() {
     </div>
   );
 
+  return <Connecte moi={moi} recharger={recharger} />;
+}
+
+function Connecte({ moi, recharger }: { moi: Etudiant; recharger: () => void }) {
+  const al = useAlertes(moi.id);
   const incomplet = !moi.nom || !moi.prenoms || !moi.moodle_relie;
 
   return (
@@ -48,6 +54,7 @@ export default function App() {
         <Link to="/" className="marque">CER<i>tain</i></Link>
         <nav>
           <NavLink to="/" end>Prosits</NavLink>
+          <NavLink to="/alertes">Alertes{al.nonLues > 0 && <span className="compteur" aria-label={`${al.nonLues} non lues`}>{al.nonLues}</span>}</NavLink>
           <NavLink to="/profil">Profil{incomplet && <span className="point" aria-label="à compléter" />}</NavLink>
           {moi.role === "admin" && <NavLink to="/acces">Accès</NavLink>}
           <button onClick={() => supabase.auth.signOut()}>Sortir</button>
@@ -57,6 +64,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={incomplet ? <Navigate to="/profil" replace /> : <Prosits moi={moi} />} />
+          <Route path="/alertes" element={<PageAlertes liste={al.liste} nonLues={al.nonLues} marquerLue={al.marquerLue} toutLire={al.toutLire} />} />
           <Route path="/profil" element={<Profil moi={moi} onChange={recharger} />} />
           <Route path="/prosits/nouveau" element={<NouveauProsit moi={moi} />} />
           <Route path="/prosits/:id" element={<PrositDetail moi={moi} />} />
@@ -64,6 +72,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <Bandeau n={al.recue} fermer={al.fermer} />
       <footer className="pied">
         <span>CERtain — projet étudiant, Ucac-Icam</span>
         <span>Ton mot de passe Moodle n'est jamais conservé</span>
