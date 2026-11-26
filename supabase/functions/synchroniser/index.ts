@@ -100,7 +100,10 @@ Deno.serve(async (req) => {
 
   // Qui demande ?
   let cible: string | null = null;
+  // Diagnostic (cron seulement) : { diagnostic: true, etudiant: id } renvoie les devoirs vus et pourquoi ils sont retenus ou non
+  const corps = await req.json().catch(() => ({}));
   const { data: cronOk } = await admin.rpc("serveur_verifier_cron", { p_secret: req.headers.get("x-cron-secret") ?? "" });
+  const diag = cronOk === true && corps?.diagnostic === true && typeof corps.etudiant === "string";
   if (cronOk !== true) {
     const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer /, "");
     const { data: { user } } = await admin.auth.getUser(jwt);
@@ -111,13 +114,15 @@ Deno.serve(async (req) => {
   // Par lots : à chaque passage (toutes les 10 min), les étudiants synchronisés il y a le plus longtemps d'abord.
   // Un étudiant est repris au plus toutes les ~50 min ; un clic sur « Actualiser » traite tout de suite le sien.
   let q = admin.from("etudiants").select("id, groupe, auto, promotion").eq("moodle_relie", true).eq("actif", true);
-  if (cible) q = q.eq("id", cible);
+  if (diag) q = q.eq("id", corps.etudiant);
+  else if (cible) q = q.eq("id", cible);
   else q = q.eq("auto", true).or(`sync_le.is.null,sync_le.lt.${new Date(Date.now() - 50 * 60_000).toISOString()}`)
     .order("sync_le", { ascending: true, nullsFirst: true }).limit(LOT);
   const { data: etudiants } = await q;
 
   const maintenant = Date.now() / 1000;
   const resultat: Record<string, unknown>[] = [];
+  const vus: Record<string, unknown>[] = [];
 
   for (const e of etudiants ?? []) {
     const { data: jeton } = await admin.rpc("serveur_lire_jeton", { p_etudiant: e.id });
@@ -128,6 +133,7 @@ Deno.serve(async (req) => {
 
     for (const c of cours) {
       for (const d of c.assignments) {
+        if (diag) vus.push({ cours: c.fullname, devoir: d.name, cer: estUnCer(c, d), echeance: d.duedate ? new Date(d.duedate * 1000).toISOString().slice(0, 10) : null });
         if (!estUnCer(c, d)) continue;
         // Variantes « (Kin) » d'un autre campus : jamais déposées ici
         if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name)) continue;
@@ -190,5 +196,5 @@ Deno.serve(async (req) => {
       await admin.from("prosits").update({ statut: "en_attente" }).eq("id", p.id); lances++;
     }
   }
-  return rep(200, { etudiants: etudiants?.length ?? 0, actions: resultat, lances });
+  return rep(200, { etudiants: etudiants?.length ?? 0, actions: resultat, lances, ...(diag ? { vus } : {}) });
 });
