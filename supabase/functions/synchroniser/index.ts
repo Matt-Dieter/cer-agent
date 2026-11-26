@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
 
   // Par lots : à chaque passage (toutes les 10 min), les étudiants synchronisés il y a le plus longtemps d'abord.
   // Un étudiant est repris au plus toutes les ~50 min ; un clic sur « Actualiser » traite tout de suite le sien.
-  let q = admin.from("etudiants").select("id, groupe, auto, promotion, devoirs_kin").eq("moodle_relie", true).eq("actif", true);
+  let q = admin.from("etudiants").select("id, groupe, auto, promotion").eq("moodle_relie", true).eq("actif", true);
   if (cible) q = q.eq("id", cible);
   else q = q.eq("auto", true).or(`sync_le.is.null,sync_le.lt.${new Date(Date.now() - 50 * 60_000).toISOString()}`)
     .order("sync_le", { ascending: true, nullsFirst: true }).limit(LOT);
@@ -129,8 +129,8 @@ Deno.serve(async (req) => {
     for (const c of cours) {
       for (const d of c.assignments) {
         if (!estUnCer(c, d)) continue;
-        // Les devoirs marqués « Kin » sont ceux des étudiants qui l'ont indiqué dans leur profil ; les autres les ignorent
-        if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name) !== !!e.devoirs_kin) continue;
+        // Variantes « (Kin) » d'un autre campus : jamais déposées ici
+        if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name)) continue;
         // deno-lint-ignore no-explicit-any
         const dd = d as any;
         if (dd.cutoffdate && dd.cutoffdate < maintenant) continue;         // devoir fermé

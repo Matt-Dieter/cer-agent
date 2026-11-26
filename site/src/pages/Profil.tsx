@@ -8,14 +8,13 @@ export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () 
   const [prenoms, setPrenoms] = useState(moi.prenoms);
   const [groupe, setGroupe] = useState(moi.groupe);
   const [auto, setAuto] = useState(moi.auto);
-  const [kin, setKin] = useState(moi.devoirs_kin);
   const [theme, setTheme] = useState<ThemeComplet>(complet(moi.theme));
   const [msg, setMsg] = useState("");
 
   const enregistrer = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const { error } = await supabase.from("etudiants")
-      .update({ nom: nom.trim().toUpperCase(), prenoms: prenoms.trim(), groupe: groupe.trim(), theme, auto, devoirs_kin: kin }).eq("id", moi.id);
+      .update({ nom: nom.trim().toUpperCase(), prenoms: prenoms.trim(), groupe: groupe.trim(), theme, auto }).eq("id", moi.id);
     setMsg(error ? "L'enregistrement n'est pas passé." : "Enregistré.");
     onChange();
     setTimeout(() => setMsg(""), 2500);
@@ -52,11 +51,6 @@ export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () 
             <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
             Suivre seul les CER à rendre sur Moodle
           </label>
-          <label className="interrupteur" style={{ marginTop: "1.2rem" }}>
-            <input type="checkbox" checked={kin} onChange={(e) => setKin(e.target.checked)} />
-            Mes devoirs de dépôt sont ceux marqués « (Kin) » sur Moodle
-          </label>
-          <p className="doux" style={{ fontSize: ".85rem", margin: ".3rem 0 0" }}>Coche seulement si ton campus dépose dans les devoirs dont le nom contient « Kin ». Sinon CERtain les ignore.</p>
           <p className="doux" style={{ fontSize: ".9rem", marginTop: ".8rem" }}>
             {auto ? "Régulièrement (environ toutes les heures), CERtain lit tes cours de prosit. Un nouveau dépôt de CER ? Il crée le prosit, importe l'énoncé, lance la rédaction la veille de l'échéance et dépose ton CER dès qu'il est prêt. Tu relis ensuite et tu peux le remplacer."
               : "CERtain ne crée rien seul. Utilise « Actualiser depuis Moodle » sur la page des prosits."}
