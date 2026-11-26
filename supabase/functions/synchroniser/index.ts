@@ -2,7 +2,7 @@
 // - Détecte les devoirs « CER » à rendre dans les cours « Prosit N - Notion » de chaque étudiant relié.
 // - Crée le prosit (énoncé, objectifs et ressources importés) ou rejoint celui d'un camarade du même groupe.
 // - Lance la rédaction 30 h avant l'échéance si l'énoncé est là.
-// Appel : pg_cron (x-cron-secret, tous les étudiants en mode auto) ou un étudiant connecté (lui seul).
+// Appel : pg_cron toutes les 10 min (x-cron-secret, par lots d'étudiants en mode auto) ou un étudiant connecté (lui seul).
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const MOODLE = "https://moodle.icam-afrique.com";
@@ -10,6 +10,8 @@ const HORIZON_J = 21;        // devoirs dont l'échéance tombe dans les 21 proc
 const RATTRAPAGE_J = 14;    // CER en retard repris s'ils peuvent encore être déposés
 const LANCEMENT_H = 30;      // rédaction lancée 30 h avant l'échéance
 const MAX_RESSOURCE = 10e6;  // 10 Mo par ressource, 3 ressources au plus
+const LOT = 8;               // étudiants traités par passage
+const norm = (g: string) => g.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/groupe|group|gr\b/g, "").replace(/[^a-z0-9]/g, "");
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
@@ -84,8 +86,12 @@ Deno.serve(async (req) => {
     cible = user.id;
   }
 
-  let q = admin.from("etudiants").select("id, groupe, auto").eq("moodle_relie", true).eq("actif", true);
-  q = cible ? q.eq("id", cible) : q.eq("auto", true);
+  // Par lots : à chaque passage (toutes les 10 min), les étudiants synchronisés il y a le plus longtemps d'abord.
+  // Un étudiant est repris au plus toutes les ~50 min ; un clic sur « Actualiser » traite tout de suite le sien.
+  let q = admin.from("etudiants").select("id, groupe, auto, promotion, devoirs_kin").eq("moodle_relie", true).eq("actif", true);
+  if (cible) q = q.eq("id", cible);
+  else q = q.eq("auto", true).or(`sync_le.is.null,sync_le.lt.${new Date(Date.now() - 50 * 60_000).toISOString()}`)
+    .order("sync_le", { ascending: true, nullsFirst: true }).limit(LOT);
   const { data: etudiants } = await q;
 
   const maintenant = Date.now() / 1000;
@@ -106,7 +112,8 @@ Deno.serve(async (req) => {
       if (!m) continue;
       for (const d of c.assignments) {
         if (!/cer|d[ée]p[oô]t/i.test(d.name)) continue;
-        if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name)) continue;            // dépôt d'un autre campus
+        // Les devoirs marqués « Kin » sont ceux des étudiants qui l'ont indiqué dans leur profil ; les autres les ignorent
+        if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name) !== !!e.devoirs_kin) continue;
         // deno-lint-ignore no-explicit-any
         const dd = d as any;
         if (dd.cutoffdate && dd.cutoffdate < maintenant) continue;         // devoir fermé
@@ -127,12 +134,15 @@ Deno.serve(async (req) => {
         if (st?.lastattempt?.submission?.status === "submitted") continue;
 
         // Un camarade du même groupe suit déjà ce devoir → on le rejoint
+        // Même devoir, même promotion, même groupe (écrit à peu près pareil : « Groupe 2 », « groupe2 », « G2 »…)
         const groupe = (e.groupe ?? "").trim();
         if (groupe) {
-          const { data: ami } = await admin.from("prosits").select("id").eq("cmid", d.cmid).ilike("groupe", groupe)
-            .not("statut", "in", "(depose)").limit(1);
-          if (ami?.length) {
-            await admin.from("prosit_membres").upsert({ prosit_id: ami[0].id, etudiant_id: e.id, invitation: "accepte" });
+          let qa = admin.from("prosits").select("id, groupe").eq("cmid", d.cmid).not("statut", "in", "(depose)");
+          qa = e.promotion ? qa.eq("promotion", e.promotion) : qa.is("promotion", null);
+          const { data: candidats } = await qa;
+          const ami = (candidats ?? []).find((c: { groupe: string }) => norm(c.groupe ?? "") === norm(groupe));
+          if (ami) {
+            await admin.from("prosit_membres").upsert({ prosit_id: ami.id, etudiant_id: e.id, invitation: "accepte" });
             resultat.push({ etudiant: e.id, cmid: d.cmid, action: "rejoint" });
             continue;
           }
@@ -141,7 +151,7 @@ Deno.serve(async (req) => {
         const notion = (m[2] ?? c.fullname).trim();
         const { data: p, error } = await admin.from("prosits").insert({
           createur_id: e.id, numero: Number(m[1]), notion, cours: c.shortname.replace(/-P\d+$/i, ""),
-          cmid: d.cmid, course_id: c.id, groupe, annee: anneeAcad(new Date(d.duedate * 1000)),
+          cmid: d.cmid, course_id: c.id, groupe, promotion: e.promotion, annee: anneeAcad(new Date(d.duedate * 1000)),
           echeance: new Date(d.duedate * 1000).toISOString(), source: "moodle",
         }).select("id").single();
         if (error || !p) { resultat.push({ etudiant: e.id, cmid: d.cmid, erreur: error?.message }); continue; }
@@ -150,6 +160,8 @@ Deno.serve(async (req) => {
       }
     }
   }
+
+  if ((etudiants ?? []).length) await admin.from("etudiants").update({ sync_le: new Date().toISOString() }).in("id", (etudiants ?? []).map((x: { id: string }) => x.id));
 
   // Lancement automatique de la rédaction à l'approche de l'échéance
   const seuil = new Date(Date.now() + LANCEMENT_H * 3600_000).toISOString();

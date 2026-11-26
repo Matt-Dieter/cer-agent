@@ -5,8 +5,8 @@ import { supabase, STATUTS, TON, dateCourte, delai, type Etudiant, type Membre, 
 type MembreNom = Membre & { etudiants: { nom: string; prenoms: string } | null };
 const DOCS = [
   { id: "enonce", nom: "Énoncé", aide: "Texte du prosit et objectifs" },
-  { id: "aller", nom: "Prosit aller", aide: "Mots clés, problématique, pistes, plan" },
-  { id: "retour", nom: "Prosit retour", aide: "Verdicts et corrections du tuteur" },
+  { id: "aller", nom: "Prosit aller", aide: "facultatif · mots clés, problématique, pistes, plan" },
+  { id: "retour", nom: "Prosit retour", aide: "facultatif · verdicts et corrections du tuteur" },
 ] as const;
 const ETAPES = ["Importé", "Rédaction", "Prêt", "Déposé"];
 const ETAPE: Record<string, number> = { brouillon: 0, en_attente: 1, en_redaction: 1, erreur: 1, a_relire: 2, pret: 2, depose: 3 };
@@ -138,7 +138,7 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
       )}
       {moiM?.invitation === "accepte" && p.statut === "brouillon" && (
         <div className="encart">
-          <p>{doc("enonce") ? "La rédaction démarrera seule la veille de l'échéance. Pressé ? Lance-la maintenant : elle partira au prochain passage (12h43 ou 21h43), puis le CER sera déposé aussitôt. Ajoute l'aller et le retour avant si tu les as." : "Ajoute au moins l'énoncé pour que la rédaction puisse démarrer."}</p>
+          <p>{doc("enonce") ? "La rédaction démarre seule la veille de l'échéance, avec ou sans prosit aller. Pressé ? Lance-la maintenant : elle partira au prochain passage (12h43 ou 21h43), puis le CER sera déposé aussitôt. Tu peux ajouter l'aller et le retour avant si tu les as, ce n'est pas obligatoire." : "Ajoute au moins l'énoncé pour que la rédaction puisse démarrer."}</p>
           <button className="btn" disabled={!doc("enonce")} onClick={() => action("lancer")}>Rédiger maintenant</button>
         </div>
       )}
@@ -174,7 +174,7 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
       )}
 
       <section className="bloc">
-        <header><span className="meta">02</span><h2>Documents</h2><p>{p.source === "moodle" ? "L'énoncé et les ressources viennent de Moodle. " : ""}Tout membre peut ajouter ou remplacer un document du groupe. Plus le prosit aller et le retour sont complets, plus le CER est fidèle à ce que vous avez décidé.</p></header>
+        <header><span className="meta">02</span><h2>Documents</h2><p>{p.source === "moodle" ? "L'énoncé et les ressources viennent de Moodle. " : ""}Tout membre peut ajouter ou remplacer un document du groupe. Le prosit aller et le retour sont facultatifs : sans eux, CERtain les reconstruit à partir de l'énoncé. Avec eux, le CER est plus fidèle à ce que vous avez décidé.</p></header>
         <div>
           <ul className="lignes">
             {DOCS.map((d) => (
@@ -199,7 +199,7 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
 
           {moiM?.invitation === "accepte" && (
             <>
-              <h3>Mes documents (pour mon CER seulement)</h3>
+              <h3>Mes documents (facultatif, pour mon CER seulement)</h3>
               <p className="doux" style={{ fontSize: ".88rem", margin: ".2rem 0 .8rem" }}>Ton propre prosit aller ou retour, s'il diffère de celui du groupe. Il remplace celui du groupe pour ta version, et personne d'autre ne le voit.</p>
               <ul className="lignes">
                 {(["aller", "retour"] as const).map((d) => {

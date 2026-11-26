@@ -28,7 +28,7 @@ export type Redaction = {
 };
 export type Etudiant = {
   id: string; email: string; nom: string; prenoms: string; groupe: string;
-  theme: Theme; moodle_relie: boolean; auto: boolean; role: "etudiant" | "admin"; actif: boolean;
+  theme: Theme; moodle_relie: boolean; auto: boolean; promotion: string | null; devoirs_kin: boolean; role: "etudiant" | "admin"; actif: boolean;
 };
 export type Prosit = {
   id: string; createur_id: string; numero: number; notion: string; cours: string;

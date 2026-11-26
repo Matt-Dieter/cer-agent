@@ -4,7 +4,6 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase, type Etudiant } from "./supabase";
 import Connexion from "./pages/Connexion";
 import Prosits from "./pages/Prosits";
-import NouveauProsit from "./pages/NouveauProsit";
 import PrositDetail from "./pages/PrositDetail";
 import Profil from "./pages/Profil";
 import Themes from "./Themes";
@@ -66,7 +65,6 @@ function Connecte({ moi, recharger }: { moi: Etudiant; recharger: () => void }) 
           <Route path="/" element={incomplet ? <Navigate to="/profil" replace /> : <Prosits moi={moi} />} />
           <Route path="/alertes" element={<PageAlertes liste={al.liste} nonLues={al.nonLues} marquerLue={al.marquerLue} toutLire={al.toutLire} />} />
           <Route path="/profil" element={<Profil moi={moi} onChange={recharger} />} />
-          <Route path="/prosits/nouveau" element={<NouveauProsit moi={moi} />} />
           <Route path="/prosits/:id" element={<PrositDetail moi={moi} />} />
           {moi.role === "admin" && <Route path="/acces" element={<Acces />} />}
           <Route path="*" element={<Navigate to="/" replace />} />

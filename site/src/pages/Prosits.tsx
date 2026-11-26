@@ -56,8 +56,7 @@ export default function Prosits({ moi }: { moi: Etudiant }) {
       {liste && aVenir.length === 0 && invitations.length === 0 && (
         <div className="vide">
           <h2>Rien à rendre <em>pour l'instant.</em></h2>
-          <p className="doux">CERtain regarde Moodle toutes les heures. Dès qu'un dépôt de CER s'ouvre dans un de tes cours de prosit, il apparaît ici avec l'énoncé déjà importé.</p>
-          <Link className="lien" to="/prosits/nouveau">Ajouter un prosit à la main</Link>
+          <p className="doux">CERtain regarde Moodle régulièrement. Dès qu'un dépôt de CER s'ouvre dans un de tes cours de prosit, il apparaît ici avec l'énoncé déjà importé.</p>
         </div>
       )}
       {aVenir.length > 0 && <ul className="liste">{aVenir.map((p) => <Rang key={p.id} p={p} />)}</ul>}
@@ -66,8 +65,6 @@ export default function Prosits({ moi }: { moi: Etudiant }) {
         <div className="sous-titre"><span className="meta">Terminés</span></div>
         <ul className="liste">{passes.map((p) => <Rang key={p.id} p={p} />)}</ul>
       </>}
-
-      {aVenir.length > 0 && <p style={{ marginTop: "2rem" }}><Link className="lien" to="/prosits/nouveau">Ajouter un prosit à la main</Link></p>}
     </div>
   );
 }

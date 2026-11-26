@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
-type Ligne = { email: string; ajoute_le: string; inscrit: boolean; moodle_relie: boolean; actif: boolean; role: string; nom: string };
+type Ligne = { email: string; ajoute_le: string; inscrit: boolean; moodle_relie: boolean; actif: boolean; role: string; nom: string; promotion: string | null };
 
 // Réservé à l'administrateur : qui peut utiliser CERtain
 export default function Acces() {
@@ -55,7 +55,7 @@ export default function Acces() {
           <li key={l.email}>
             <span>
               {l.nom || <span className="doux">pas encore inscrit</span>}
-              <span className="mono" style={{ display: "block" }}>{l.email}</span>
+              <span className="mono" style={{ display: "block" }}>{l.email}{l.promotion ? ` · promotion ${l.promotion}` : ""}</span>
             </span>
             <span style={{ display: "flex", gap: "1.2rem", alignItems: "center" }}>
               <span className={`statut ${!l.inscrit ? "" : l.moodle_relie ? "ok" : "attention"}`}>
