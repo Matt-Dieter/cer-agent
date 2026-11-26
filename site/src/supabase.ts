@@ -17,6 +17,14 @@ export type Theme = {
   pagination?: "page_sur" | "numero" | "tiret" | "aucune";
   entete?: "complet" | "titre" | "aucun";
   marges?: "etroites" | "normales" | "larges";
+  // Contenu : voir le skill cer-prosit-groupe, section « Contenu propre à chaque membre »
+  redaction?: Redaction;
+};
+export type Redaction = {
+  ton?: "formel" | "pedagogique" | "direct";
+  detail?: "concis" | "standard" | "approfondi";
+  angle?: "technique" | "metier" | "mixte";
+  exemples?: "cas_enonce" | "autres_domaines";
 };
 export type Etudiant = {
   id: string; email: string; nom: string; prenoms: string; groupe: string;

@@ -60,12 +60,39 @@ Page de garde : « CER PROSIT N », sujet, sous-titre éventuel, puis seulement 
 5. **Mettre en forme** un .docx maître selon la charte, avec le skill docx.
 6. **Décliner** : une version par membre.
    - **Fond commun, obligatoire** : mêmes mots clés, problématique, pistes, plan d'action, verdicts, sources, chiffres et tableaux (mêmes données). Le prosit aller et le retour du groupe restent la référence de tous.
-   - **Rédaction propre à chaque membre** : reformuler les parties II, III et la conclusion (tournures, ordre des phrases, exemples concrets choisis parmi ceux qu'appuient les sources), sans ajouter d'affirmation non sourcée ni changer un verdict. Les définitions de la partie I peuvent rester proches.
+   - **Contenu propre à chaque membre** : voir « Contenu propre à chaque membre » ci-dessous. Les versions ne se limitent pas à des phrases reformulées : l'angle, les exemples, les sources mises en avant, la construction des paragraphes et les tableaux diffèrent, sans qu'aucun fait ni verdict ne change.
    - **Thème propre à chaque membre** : appliquer `theme` (voir « Thèmes »).
    - Nom de fichier : `CER_Prosit_<N>_<NOM>_<Prenom>.docx` (sans accents ni espaces).
    - Les trois styles de garde (bandeau, sobre, colonne) ont le même tableau de trois lignes : Rédigé par, Année académique, Établissement.
 7. **Vérifier** avec la grille, corriger, revérifier.
-8. **Livrer** dans le dossier du prosit : les .docx par membre, et `livraison.json` : `{"statut": "pret" | "a-relire", "fichiers": {"<id_etudiant>": "<nom de fichier>"}, "a_relire": ["…"], "sources": N}`. Le dépôt sur Moodle et les messages WhatsApp sont faits par le service, pas par ce skill.
+8. **Livrer** dans le dossier du prosit : les .docx par membre, et `livraison.json` : `{"statut": "pret" | "a-relire", "fichiers": {"<id_etudiant>": "<nom de fichier>"}, "a_relire": ["…"], "sources": N, "similarite_max": 0.xx}`. Le dépôt sur Moodle et les messages WhatsApp sont faits par le service, pas par ce skill.
+
+## Contenu propre à chaque membre
+
+Objectif : deux étudiants du même groupe ne rendent pas le même texte. Ce qui est **commun** ne change jamais ; ce qui est **propre** change réellement, pas seulement par synonymes.
+
+**Commun, identique dans toutes les versions** (décisions du groupe et faits) : problématique, mots clés, pistes (énoncé complet), plan d'action (étapes et ordre), verdicts, chiffres, noms et sources réellement ouvertes. Aucun membre n'invente un fait, une source ou un verdict que les autres n'ont pas.
+
+**Propre à chaque membre**, à faire varier dans les parties II, III, la conclusion et l'introduction de II :
+1. **Angle d'application** : dans chaque étape, relier la notion à un moment ou un personnage différent de l'énoncé (chacun choisit sa scène, sans contredire l'énoncé).
+2. **Exemple concret** : un exemple différent par étape, tiré de l'énoncé, des ressources du cours ou d'un domaine voisin appuyé par une source.
+3. **Sources mises en avant** : chaque version cite l'ensemble des sources du groupe, mais s'appuie en priorité sur un sous-ensemble différent pour ses définitions ; la bibliographie reste commune.
+4. **Construction** : plan interne des sous-parties (3.1, 3.2…) et ordre d'exposition de la définition, de l'explication et de l'application ; mise en avant d'un schéma ou d'un tableau différent.
+5. **Tableaux** : mêmes données de fond, mais choix de colonnes, regroupements ou tableaux supplémentaires différents (par exemple un tableau comparatif chez l'un, une matrice chez l'autre), toujours légendés et cités.
+6. **Justification des pistes** (III) : même verdict, arguments mis dans un ordre différent et appuyés sur des passages différents de la partie II.
+7. **Conclusion** : mêmes apports, accents et enchaînements différents.
+
+**Réglages du membre** (`theme.redaction`, tous facultatifs ; défaut entre crochets) :
+| Clé | Valeurs | Effet |
+|---|---|---|
+| `ton` | formel, pedagogique, direct [formel] | formel : rapport d'ingénieur sobre ; pedagogique : explique avec des analogies courtes ; direct : phrases brèves, listes. |
+| `detail` | concis, standard, approfondi [standard] | cible de pages hors garde : 6-7, 8-10, 11-13. |
+| `angle` | technique, metier, mixte [mixte] | technique : architecture, outils, formalisation ; metier : parties prenantes, risques, organisation. |
+| `exemples` | cas_enonce, autres_domaines [cas_enonce] | cas_enonce : exemples pris dans le cas du prosit ; autres_domaines : exemples d'autres secteurs, sourcés. |
+
+**Sans réglage** (ou réglages identiques entre deux membres), différencier quand même : tirer une combinaison propre à chaque membre à partir de `id_etudiant` (par exemple, rang du membre trié par `id_etudiant` : 1er = angle technique et ton formel, 2e = angle metier et ton pedagogique, 3e = ton direct et exemples d'autres domaines, puis recommencer).
+
+**Contrôle de différence** : après rédaction, lancer `python certain/similarite.py <dossier>` ; il compare les versions deux à deux. Seuil : moins de 30 % de paragraphes de II et III dont la ressemblance dépasse 0,8, et aucune partie II ou III entièrement identique. Au-delà, réécrire la version la plus proche d'une autre avec un autre angle ou d'autres exemples, puis relancer. Le script ne juge pas les faits : relire à part que les verdicts, chiffres et sources sont identiques.
 
 ## Thèmes (personnalisation propre à chaque membre)
 
@@ -123,5 +150,6 @@ Pièges : les modèles python-docx contiennent des bleus cachés (styles, thème
 6. Chaque sigle est expliqué à sa première apparition.
 7. Tous les tableaux sont numérotés, légendés et cités.
 8. Rendu regardé page par page (PDF puis images) : garde correcte, aucun bleu, en-tête et pied dès la page 2 ; le validateur docx passe.
-9. Une version par membre de `prosit.json` : bon nom sur la garde, dans l'en-tête et les propriétés ; garde sans ligne « Groupe » ni « Membres du groupe » ; **chaque clé du `theme` du membre visiblement appliquée** (garde, titres, numérotation, tableaux, encadrés, sommaire, pagination, en-tête, marges, polices) ; thème du membre appliqué ; rédaction différente d'une version à l'autre (aucun paragraphe de II ou III identique) ; mêmes pistes, verdicts, sources et chiffres dans toutes les versions.
+9. Une version par membre de `prosit.json` : bon nom sur la garde, dans l'en-tête et les propriétés ; garde sans ligne « Groupe » ni « Membres du groupe » ; **chaque clé du `theme` du membre visiblement appliquée** (garde, titres, numérotation, tableaux, encadrés, sommaire, pagination, en-tête, marges, polices) ; thème du membre appliqué ; contenu propre à chaque membre (angle, exemples, sources mises en avant, construction et tableaux différents ; `similarite.py` sous le seuil) ; mêmes pistes, verdicts, sources et chiffres dans toutes les versions.
 10. Corrections du tuteur intégrées ; écarts avec le retour listés dans `a_relire`.
+11. Les versions sont différentes sur le fond (angle, exemples) et **identiques sur les faits** : mêmes pistes, verdicts, chiffres, sources, problématique et plan ; `livraison.json` indique le résultat de `similarite.py`.

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Theme } from "./supabase";
-import { ENCADRES, ENTETES, GARDES, INTERLIGNES, MARGES, NUMEROTATIONS, PAGINATIONS, PALETTES, POLICES, PRESETS,
-  TABLEAUX, TAILLES, TITRES, couleurValide, type ThemeComplet } from "./theme";
+import { ANGLES, DETAILS, ENCADRES, ENTETES, EXEMPLES, GARDES, INTERLIGNES, MARGES, NUMEROTATIONS, PAGINATIONS, PALETTES, POLICES, PRESETS,
+  TABLEAUX, TAILLES, TITRES, TONS, couleurValide, type ThemeComplet } from "./theme";
 import ApercuGarde from "./ApercuGarde";
 
 type Props = { theme: ThemeComplet; onChange: (t: ThemeComplet) => void; nom: string; annee: string };
@@ -16,7 +16,7 @@ export default function Style({ theme, onChange, nom, annee }: Props) {
         <Groupe titre="Préréglages" aide="Un point de départ. Tout reste modifiable ensuite.">
           <div className="presets">
             {PRESETS.map((p) => (
-              <button type="button" key={p.nom} className="preset" onClick={() => poser({ ...theme, ...p.theme }, "garde")}>
+              <button type="button" key={p.nom} className="preset" onClick={() => poser({ ...theme, ...p.theme, redaction: theme.redaction }, "garde")}>
                 <b>{p.nom}</b><span>{p.aide}</span>
               </button>
             ))}
@@ -62,6 +62,14 @@ export default function Style({ theme, onChange, nom, annee }: Props) {
           <Ligne label="Numérotation"><Choix options={NUMEROTATIONS} valeur={theme.numerotation} onChange={(v) => poser({ numerotation: v }, "corps")} /></Ligne>
           <Ligne label="Tableaux"><Choix options={TABLEAUX} valeur={theme.tableaux} onChange={(v) => poser({ tableaux: v }, "corps")} /></Ligne>
           <Ligne label="Encadrés"><Choix options={ENCADRES} valeur={theme.encadres} onChange={(v) => poser({ encadres: v }, "corps")} /></Ligne>
+        </Groupe>
+
+        <Groupe titre="Ta rédaction" aide="Le fond (problématique, pistes, verdicts, sources) reste celui du groupe. Ton CER est écrit avec ton propre angle et tes propres exemples, donc il ne ressemble pas à celui d'un camarade.">
+          <Ligne label="Ton"><Choix options={TONS} valeur={theme.redaction.ton} onChange={(v) => poser({ redaction: { ...theme.redaction, ton: v } })} /></Ligne>
+          <Ligne label="Longueur"><Choix options={DETAILS} valeur={theme.redaction.detail} onChange={(v) => poser({ redaction: { ...theme.redaction, detail: v } })} /></Ligne>
+          <Ligne label="Angle"><Choix options={ANGLES} valeur={theme.redaction.angle} onChange={(v) => poser({ redaction: { ...theme.redaction, angle: v } })} /></Ligne>
+          <Ligne label="Exemples"><Choix options={EXEMPLES} valeur={theme.redaction.exemples} onChange={(v) => poser({ redaction: { ...theme.redaction, exemples: v } })} /></Ligne>
+          <p className="small" style={{ marginTop: ".6rem" }}>Sans réglage, CERtain choisit pour toi une combinaison différente de celle de tes camarades.</p>
         </Groupe>
 
         <Groupe titre="Navigation et mise en page">

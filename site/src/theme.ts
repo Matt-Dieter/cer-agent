@@ -1,4 +1,4 @@
-import type { Theme } from "./supabase";
+import type { Redaction, Theme } from "./supabase";
 
 // ── Options proposées (même liste que le skill cer-prosit-groupe, section « Thèmes ») ──────────────
 
@@ -60,6 +60,26 @@ export const MARGES = [
   { id: "larges", nom: "Larges", cm: 2.6 },
 ] as const;
 
+export const TONS = [
+  { id: "formel", nom: "Formel", aide: "Rapport d'ingénieur sobre" },
+  { id: "pedagogique", nom: "Pédagogique", aide: "Explique avec des analogies courtes" },
+  { id: "direct", nom: "Direct", aide: "Phrases brèves, listes" },
+] as const;
+export const DETAILS = [
+  { id: "concis", nom: "Concis", aide: "6 à 7 pages" },
+  { id: "standard", nom: "Standard", aide: "8 à 10 pages" },
+  { id: "approfondi", nom: "Approfondi", aide: "11 à 13 pages" },
+] as const;
+export const ANGLES = [
+  { id: "technique", nom: "Technique", aide: "Outils, architecture, formalisation" },
+  { id: "metier", nom: "Métier", aide: "Parties prenantes, risques, organisation" },
+  { id: "mixte", nom: "Mixte", aide: "Un peu des deux" },
+] as const;
+export const EXEMPLES = [
+  { id: "cas_enonce", nom: "Du cas du prosit", aide: "Personnages et situations de l'énoncé" },
+  { id: "autres_domaines", nom: "D'autres domaines", aide: "Exemples d'autres secteurs, sourcés" },
+] as const;
+
 export const TAILLES = [10.5, 11, 12] as const;
 export const INTERLIGNES = [1, 1.15, 1.5] as const;
 
@@ -75,13 +95,14 @@ export const PALETTES = [
   { nom: "Cacao & rose", principale: "33241F", accent: "BE185D" },
 ];
 
-export type ThemeComplet = Required<Theme>;
+export type ThemeComplet = Required<Omit<Theme, "redaction">> & { redaction: Required<Redaction> };
 
 export const DEFAUT: ThemeComplet = {
   police: "Calibri", police_titres: "Calibri", taille: 11, interligne: 1.15,
   couleur_principale: "2F3437", couleur_accent: "0F766E",
   garde: "bandeau", titres: "filet", numerotation: "romain", tableaux: "raye", encadres: "barre",
   sommaire: false, pagination: "page_sur", entete: "complet", marges: "normales",
+  redaction: { ton: "formel", detail: "standard", angle: "mixte", exemples: "cas_enonce" },
 };
 
 // Préréglages : un clic pour un ensemble cohérent, ensuite tout reste modifiable
@@ -143,5 +164,11 @@ export function complet(t: Theme): ThemeComplet {
     pagination: dans(t.pagination, PAGINATIONS, DEFAUT.pagination),
     entete: dans(t.entete, ENTETES, DEFAUT.entete),
     marges: dans(t.marges, MARGES, DEFAUT.marges),
+    redaction: {
+      ton: dans(t.redaction?.ton, TONS, DEFAUT.redaction.ton),
+      detail: dans(t.redaction?.detail, DETAILS, DEFAUT.redaction.detail),
+      angle: dans(t.redaction?.angle, ANGLES, DEFAUT.redaction.angle),
+      exemples: dans(t.redaction?.exemples, EXEMPLES, DEFAUT.redaction.exemples),
+    },
   };
 }

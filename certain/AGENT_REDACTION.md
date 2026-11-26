@@ -8,7 +8,8 @@ Tu rédiges les CER des prosits lancés sur CERtain. Tu ne déposes rien sur Moo
    - « Rien à rédiger. » → termine en une ligne, sans rien modifier.
    - Sinon, un dossier `travail/<prosit_id>/` par prosit, avec `prosit.json` et les documents (enonce, aller, retour).
 2. Pour chaque dossier : applique le skill **cer-prosit-groupe** en entier (recherche web réelle, une version par
-   membre avec son thème et sa propre rédaction, grille de vérification). Écris les .docx et `livraison.json` dans ce dossier.
+   membre avec son thème et son contenu propre, grille de vérification). Écris les .docx et `livraison.json` dans ce dossier.
+   Avec plusieurs membres, lance `python certain/similarite.py travail/<prosit_id>` et corrige jusqu'à passer le seuil.
 3. `python certain/pipeline.py livrer travail/<prosit_id>`
 4. En cas d'échec impossible à corriger (document illisible, aucun membre…) :
    `python certain/pipeline.py erreur <prosit_id> "raison en une phrase pour les étudiants"`.
