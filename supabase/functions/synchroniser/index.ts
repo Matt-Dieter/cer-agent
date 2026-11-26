@@ -12,6 +12,28 @@ const LANCEMENT_H = 30;      // rédaction lancée 30 h avant l'échéance
 const MAX_RESSOURCE = 10e6;  // 10 Mo par ressource, 3 ressources au plus
 const LOT = 8;               // étudiants traités par passage
 const norm = (g: string) => g.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/groupe|group|gr\b/g, "").replace(/[^a-z0-9]/g, "");
+
+// ── Détection souple des CER (testée sur 144 devoirs réels) ─────────────────────────────────────
+const FORT = /\b(cers?|compte[\s-]?rendus?|pros?its?)\b/i;                       // le nom du devoir parle d'un CER ou d'un prosit
+const FAIBLE = /d[ée]p[oô]t|rendu/i;                                              // « Dépôt », « Rendu » : seulement dans un cours de prosit
+const EXCLU = /\b(projet|livrable|rapport|pitch|check|quiz|stage|soutenance|lab|vision|pr[ée]sentation)\b/i;
+const COURS_PROSIT = /pros?its?\b|\bpr\s*-?\s*\d|-p0*\d+\s*$|\bp0*\d+\s*$/i;
+const NUM = [/\bcours\s*0*(\d{1,2})\b/i, /pros?its?\s*(?:n[°o]?\s*)?0*(\d{1,2})\b/i, /\bpr\s*-?\s*0*(\d{1,2})\b/i, /-p0*(\d{1,2})\b/i, /\bp0*(\d{1,2})\s*$/i];
+function estUnCer(c: { fullname: string; shortname: string }, d: { name: string }) {
+  const coursProsit = COURS_PROSIT.test(c.fullname + " " + c.shortname);
+  // Un livrable de projet n'est pas un CER, sauf si le nom dit « prosit »
+  const fort = FORT.test(d.name) && !(EXCLU.test(d.name) && !/\bpros?its?\b/i.test(d.name));
+  const faible = coursProsit && FAIBLE.test(d.name) && !EXCLU.test(d.name);
+  return fort || faible;
+}
+function numeroDe(c: { fullname: string; shortname: string }, d: { name: string }) {
+  for (const t of [c.fullname, d.name, c.shortname]) for (const r of NUM) { const m = t.match(r); if (m) return Number(m[1]); }
+  return 0;   // numéro non reconnu : affiché sans numéro
+}
+function notionDe(c: { fullname: string }) {
+  const m = c.fullname.match(/pros?its?\s*(?:n[°o]?\s*)?\d+\s*[-–:]?\s*(.+)$/i);
+  return (m ? m[1] : c.fullname.replace(/^\s*pr\s*-?\s*\d+\s*[-–:]?\s*/i, "")).trim();
+}
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type, apikey, x-client-info",
@@ -105,13 +127,8 @@ Deno.serve(async (req) => {
     catch (err) { resultat.push({ etudiant: e.id, erreur: String(err) }); continue; }
 
     for (const c of cours) {
-      // « Prosit 3 - Notion », « PROSIT 3 : Notion », « PR-4 Notion », code « GLOG461-P3 » ou « prosit4 »
-      const m = c.fullname.match(/pros?it\s*0*(\d+)\s*[-–:]\s*(.+)$/i)
-        ?? c.fullname.match(/^\s*pr\s*-?\s*0*(\d+)\s*[-–:]?\s*(.+)$/i)
-        ?? c.shortname.match(/(?:-P|prosit\s*-?|^pr\s*-?)0*(\d+)\s*$/i);
-      if (!m) continue;
       for (const d of c.assignments) {
-        if (!/cer|d[ée]p[oô]t/i.test(d.name)) continue;
+        if (!estUnCer(c, d)) continue;
         // Les devoirs marqués « Kin » sont ceux des étudiants qui l'ont indiqué dans leur profil ; les autres les ignorent
         if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name) !== !!e.devoirs_kin) continue;
         // deno-lint-ignore no-explicit-any
@@ -148,9 +165,9 @@ Deno.serve(async (req) => {
           }
         }
 
-        const notion = (m[2] ?? c.fullname).trim();
+        const notion = notionDe(c);
         const { data: p, error } = await admin.from("prosits").insert({
-          createur_id: e.id, numero: Number(m[1]), notion, cours: c.shortname.replace(/-P\d+$/i, ""),
+          createur_id: e.id, numero: numeroDe(c, d), notion, cours: c.shortname.replace(/-P\d+$/i, ""),
           cmid: d.cmid, course_id: c.id, groupe, promotion: e.promotion, annee: anneeAcad(new Date(d.duedate * 1000)),
           echeance: new Date(d.duedate * 1000).toISOString(), source: "moodle",
         }).select("id").single();

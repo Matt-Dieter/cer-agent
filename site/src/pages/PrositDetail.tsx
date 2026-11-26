@@ -106,7 +106,7 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
       <Link to="/" className="mono" style={{ textDecoration: "none" }}>← Tes prosits</Link>
       <div className="entete" style={{ marginTop: "1.4rem" }}>
         <div>
-          <span className="meta">{p.cours} · Prosit {p.numero}{p.groupe ? ` · ${p.groupe}` : ""}</span>
+          <span className="meta">{p.cours}{p.numero ? ` · Prosit ${p.numero}` : ""}{p.groupe ? ` · ${p.groupe}` : ""}</span>
           <h1>{p.notion}</h1>
         </div>
         <div className="echeance mono">

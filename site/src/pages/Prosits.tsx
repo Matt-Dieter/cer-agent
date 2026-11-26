@@ -75,7 +75,7 @@ function Rang({ p }: { p: Ligne }) {
   return (
     <li>
       <Link to={`/prosits/${p.id}`} className="prosit">
-        <span className="num">P{p.numero}</span>
+        <span className="num">{p.numero ? `P${p.numero}` : "—"}</span>
         <span>
           <span className="meta">{p.cours || "Prosit"}{p.source === "moodle" ? " · depuis Moodle" : ""}</span>
           <span className="titre" style={{ display: "block", marginTop: ".2rem" }}>{p.notion}</span>

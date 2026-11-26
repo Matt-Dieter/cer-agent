@@ -19,6 +19,7 @@ Contexte : à l'Ucac-Icam, un prosit se déroule en pédagogie par problème. Le
 | `retour` | fortement conseillé | verdicts des pistes, corrections du tuteur, ressources |
 
 - Chaque membre peut avoir `documents_perso` : `{"aller": "perso/<id>/aller.pdf", "retour": "perso/<id>/retour.pptx"}` (chemins dans le dossier du prosit). **C'est son propre prosit aller ou retour : il fait foi pour sa version**, à la place de celui du groupe, pour la problématique, les pistes, le plan et les verdicts (même ordre de priorité : retour, aller, recherches). Les membres sans document perso utilisent ceux du groupe. Quand les versions s'appuient sur des documents différents, leurs problématiques, pistes ou verdicts peuvent légitimement diverger : le signaler dans `a_relire` (« version de X fondée sur son propre prosit aller »), et ne pas appliquer le contrôle de faits communs entre une version perso et une version de groupe.
+- Si `numero` vaut `0`, le numéro du prosit n'a pas été reconnu : écrire « CER PROSIT » sans numéro sur la garde, dans l'en-tête, le titre du fichier et le nom du fichier (`CER_Prosit_<NOM>_<Prenom>.docx`), et ne jamais inventer de numéro.
 - `membres` est la composition **pour ce prosit**. Ne jamais la reprendre d'un prosit précédent.
 - `id_etudiant` est l'identifiant interne du service (lien vers le jeton Moodle chiffré). Le skill ne lit ni ne manipule jamais de jeton ou de mot de passe.
 - Établissement : toujours « Ucac-Icam » écrit ainsi.
