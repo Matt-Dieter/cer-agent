@@ -54,20 +54,36 @@ def a_rediger():
                        "&select=etudiant_id,etudiants(nom,prenoms,theme)")
         dossier = Path("travail") / pid
         dossier.mkdir(parents=True, exist_ok=True)
-        objets = appel("POST", "/storage/v1/object/list/prosits", {"prefix": pid, "limit": 100})
-        for o in objets or []:
+        def lister(prefixe):
+            return appel("POST", "/storage/v1/object/list/prosits", {"prefix": prefixe, "limit": 100}) or []
+
+        def telecharger(chemin, cible):
+            contenu = appel("GET", f"/storage/v1/object/prosits/{urllib.parse.quote(chemin)}", brut=True)
+            cible.parent.mkdir(parents=True, exist_ok=True)
+            cible.write_bytes(contenu)
+
+        # Documents du groupe : énoncé, aller, retour, ressources du cours
+        for o in lister(pid):
             if o["name"].split(".")[0] in ("enonce", "aller", "retour") or o["name"].startswith("ressource_"):
-                contenu = appel("GET", f"/storage/v1/object/prosits/{pid}/{urllib.parse.quote(o['name'])}", brut=True)
-                (dossier / o["name"]).write_bytes(contenu)
+                telecharger(f"{pid}/{o['name']}", dossier / o["name"])
+        # Documents personnels : perso/<id_etudiant>/aller.* et retour.* (ils servent au seul CER de cet étudiant)
+        perso = {}
+        for d in lister(f"{pid}/perso"):
+            for o in lister(f"{pid}/perso/{d['name']}"):
+                if o["name"].split(".")[0] in ("aller", "retour"):
+                    telecharger(f"{pid}/perso/{d['name']}/{o['name']}", dossier / "perso" / d["name"] / o["name"])
+                    perso.setdefault(d["name"], {})[o["name"].split(".")[0]] = f"perso/{d['name']}/{o['name']}"
         fiche = {
             "id": pid, "numero": p["numero"], "notion": p["notion"], "cours": p["cours"], "cmid": p["cmid"],
             "groupe": p["groupe"], "annee": p["annee"], "echeance": p["echeance"],
             "membres": [{"nom": m["etudiants"]["nom"], "prenoms": m["etudiants"]["prenoms"],
-                         "id_etudiant": m["etudiant_id"], "theme": m["etudiants"]["theme"]} for m in membres],
+                         "id_etudiant": m["etudiant_id"], "theme": m["etudiants"]["theme"],
+                         "documents_perso": perso.get(m["etudiant_id"], {})} for m in membres],
         }
         (dossier / "prosit.json").write_text(json.dumps(fiche, ensure_ascii=False, indent=2))
         print(f"{dossier}\tProsit {p['numero']} — {p['notion']}\t{len(membres)} membre(s)\tdocs: "
-              f"{', '.join(sorted(x.name for x in dossier.iterdir() if x.name != 'prosit.json')) or 'aucun'}")
+              f"{', '.join(sorted(x.name for x in dossier.iterdir() if x.is_file() and x.name != 'prosit.json')) or 'aucun'}"
+              f"\tdocuments perso : {sum(len(v) for v in perso.values())}")
 
 
 def livrer(dossier):

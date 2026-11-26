@@ -18,6 +18,7 @@ Contexte : à l'Ucac-Icam, un prosit se déroule en pédagogie par problème. Le
 | `aller` | non | prosit aller du groupe |
 | `retour` | fortement conseillé | verdicts des pistes, corrections du tuteur, ressources |
 
+- Chaque membre peut avoir `documents_perso` : `{"aller": "perso/<id>/aller.pdf", "retour": "perso/<id>/retour.pptx"}` (chemins dans le dossier du prosit). **C'est son propre prosit aller ou retour : il fait foi pour sa version**, à la place de celui du groupe, pour la problématique, les pistes, le plan et les verdicts (même ordre de priorité : retour, aller, recherches). Les membres sans document perso utilisent ceux du groupe. Quand les versions s'appuient sur des documents différents, leurs problématiques, pistes ou verdicts peuvent légitimement diverger : le signaler dans `a_relire` (« version de X fondée sur son propre prosit aller »), et ne pas appliquer le contrôle de faits communs entre une version perso et une version de groupe.
 - `membres` est la composition **pour ce prosit**. Ne jamais la reprendre d'un prosit précédent.
 - `id_etudiant` est l'identifiant interne du service (lien vers le jeton Moodle chiffré). Le skill ne lit ni ne manipule jamais de jeton ou de mot de passe.
 - Établissement : toujours « Ucac-Icam » écrit ainsi.
@@ -71,7 +72,7 @@ Page de garde : « CER PROSIT N », sujet, sous-titre éventuel, puis seulement 
 
 Objectif : deux étudiants du même groupe ne rendent pas le même texte. Ce qui est **commun** ne change jamais ; ce qui est **propre** change réellement, pas seulement par synonymes.
 
-**Commun, identique dans toutes les versions** (décisions du groupe et faits) : problématique, mots clés, pistes (énoncé complet), plan d'action (étapes et ordre), verdicts, chiffres, noms et sources réellement ouvertes. Aucun membre n'invente un fait, une source ou un verdict que les autres n'ont pas.
+**Commun, identique dans toutes les versions qui s'appuient sur les mêmes documents** (décisions du groupe et faits) : problématique, mots clés, pistes (énoncé complet), plan d'action (étapes et ordre), verdicts, chiffres, noms et sources réellement ouvertes. Aucun membre n'invente un fait, une source ou un verdict que les autres n'ont pas.
 
 **Propre à chaque membre**, à faire varier dans les parties II, III, la conclusion et l'introduction de II :
 1. **Angle d'application** : dans chaque étape, relier la notion à un moment ou un personnage différent de l'énoncé (chacun choisit sa scène, sans contredire l'énoncé).

@@ -18,6 +18,7 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
   const [p, setP] = useState<Prosit | null>(null);
   const [membres, setMembres] = useState<MembreNom[]>([]);
   const [docs, setDocs] = useState<string[]>([]);
+  const [perso, setPerso] = useState<string[]>([]);
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState("");
   const [envoi, setEnvoi] = useState(false);
@@ -29,13 +30,15 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
       supabase.storage.from("prosits").list(id),
     ]);
     setP(pr as Prosit); setMembres((mb ?? []) as MembreNom[]); setDocs((fichiers ?? []).map((f) => f.name));
+    const { data: mes } = await supabase.storage.from("prosits").list(`${id}/perso/${moi.id}`);
+    setPerso((mes ?? []).map((f) => f.name));
   };
   useEffect(() => { charger(); }, [id]);
 
   if (!p) return <div className="chargement">ouverture du prosit…</div>;
   const moiM = membres.find((m) => m.etudiant_id === moi.id);
   const createur = p.createur_id === moi.id;
-  const modifiable = createur && ["brouillon", "en_attente"].includes(p.statut);
+  const modifiable = createur && ["brouillon", "en_attente"].includes(p.statut);  // invitations et changement de numéro : créateur seulement
   const doc = (d: string) => docs.find((n) => n.startsWith(d + "."));
   const ressources = docs.filter((n) => n.startsWith("ressource_"));
   const etape = ETAPE[p.statut] ?? 0;
@@ -48,10 +51,20 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
     const { data } = await supabase.storage.from("prosits").createSignedUrl(chemin, 120);
     if (data) window.open(data.signedUrl, "_blank");
   };
-  const envoyerDoc = async (d: string, f: File) => {
+  const envoyerDoc = async (d: string, f: File, personnel = false) => {
     const ext = f.name.split(".").pop()?.toLowerCase() ?? "txt";
-    const { error } = await supabase.storage.from("prosits").upload(`${id}/${d}.${ext}`, f);
-    setMsg(error ? "Envoi refusé : ce document existe peut-être déjà." : "Document ajouté."); charger();
+    const dossier = personnel ? `${id}/perso/${moi.id}` : `${id}`;
+    // Remplace l'ancienne version, quel que soit son format
+    const anciens = (personnel ? perso : docs).filter((n) => n.startsWith(d + ".") && n !== `${d}.${ext}`);
+    if (anciens.length) await supabase.storage.from("prosits").remove(anciens.map((n) => `${dossier}/${n}`));
+    const { error } = await supabase.storage.from("prosits").upload(`${dossier}/${d}.${ext}`, f, { upsert: true });
+    setMsg(error ? "Envoi refusé. Réessaie avec un fichier PDF, Word, PowerPoint ou texte." : personnel ? "Ton document perso est enregistré : il servira à ton CER." : "Document du groupe enregistré.");
+    charger();
+  };
+  const relancer = async () => {
+    if (!confirm("Refaire la rédaction avec les documents actuels ? Elle repartira au prochain passage (12h43 ou 21h43) et ton CER sera redéposé avec la nouvelle version.")) return;
+    const { error } = await supabase.rpc("relancer_redaction", { p_prosit: id });
+    setMsg(error ? "Impossible de relancer pour l'instant." : "Rédaction relancée : elle partira au prochain passage."); charger();
   };
   const inviter = async (e: React.FormEvent) => {
     e.preventDefault(); setMsg("");
@@ -161,24 +174,58 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
       )}
 
       <section className="bloc">
-        <header><span className="meta">02</span><h2>Documents</h2><p>{p.source === "moodle" ? "L'énoncé et les ressources viennent de Moodle." : "Ajoutés par le groupe."}</p></header>
-        <ul className="lignes">
-          {DOCS.map((d) => (
-            <li key={d.id}>
-              <span>{d.nom} <span className="doux" style={{ fontSize: ".85rem" }}>— {d.aide}</span></span>
-              {doc(d.id) ? <button className="lien" onClick={() => ouvrir(doc(d.id)!)}>Ouvrir</button>
-                : modifiable ? <label className="lien" style={{ flexDirection: "row", fontSize: "inherit", color: "inherit" }}>Ajouter
-                    <input type="file" hidden accept=".pdf,.docx,.doc,.txt,.md,.odt" onChange={(e) => e.target.files?.[0] && envoyerDoc(d.id, e.target.files[0])} /></label>
-                : <span className="mono">—</span>}
-            </li>
-          ))}
-          {ressources.map((r) => (
-            <li key={r}>
-              <span>{r.replace(/^ressource_/, "").replace(/_/g, " ")} <span className="doux" style={{ fontSize: ".85rem" }}>— ressource du cours</span></span>
-              <button className="lien" onClick={() => ouvrir(r)}>Ouvrir</button>
-            </li>
-          ))}
-        </ul>
+        <header><span className="meta">02</span><h2>Documents</h2><p>{p.source === "moodle" ? "L'énoncé et les ressources viennent de Moodle. " : ""}Tout membre peut ajouter ou remplacer un document du groupe. Plus le prosit aller et le retour sont complets, plus le CER est fidèle à ce que vous avez décidé.</p></header>
+        <div>
+          <ul className="lignes">
+            {DOCS.map((d) => (
+              <li key={d.id}>
+                <span>{d.nom} <span className="doux" style={{ fontSize: ".85rem" }}>— {d.aide}</span></span>
+                <span style={{ display: "flex", gap: "1rem" }}>
+                  {doc(d.id) && <button className="lien" onClick={() => ouvrir(doc(d.id)!)}>Ouvrir</button>}
+                  {moiM?.invitation === "accepte" ? (
+                    <label className="lien" style={{ flexDirection: "row", fontSize: "inherit", color: "inherit" }}>{doc(d.id) ? "Remplacer" : "Ajouter"}
+                      <input type="file" hidden accept=".pdf,.docx,.doc,.txt,.md,.odt,.pptx,.ppt" onChange={(e) => e.target.files?.[0] && envoyerDoc(d.id, e.target.files[0])} /></label>
+                  ) : !doc(d.id) ? <span className="mono">—</span> : null}
+                </span>
+              </li>
+            ))}
+            {ressources.map((r) => (
+              <li key={r}>
+                <span>{r.replace(/^ressource_/, "").replace(/_/g, " ")} <span className="doux" style={{ fontSize: ".85rem" }}>— ressource du cours</span></span>
+                <button className="lien" onClick={() => ouvrir(r)}>Ouvrir</button>
+              </li>
+            ))}
+          </ul>
+
+          {moiM?.invitation === "accepte" && (
+            <>
+              <h3>Mes documents (pour mon CER seulement)</h3>
+              <p className="doux" style={{ fontSize: ".88rem", margin: ".2rem 0 .8rem" }}>Ton propre prosit aller ou retour, s'il diffère de celui du groupe. Il remplace celui du groupe pour ta version, et personne d'autre ne le voit.</p>
+              <ul className="lignes">
+                {(["aller", "retour"] as const).map((d) => {
+                  const f = perso.find((n) => n.startsWith(d + "."));
+                  return (
+                    <li key={d}>
+                      <span>{d === "aller" ? "Mon prosit aller" : "Mon prosit retour"}</span>
+                      <span style={{ display: "flex", gap: "1rem" }}>
+                        {f && <button className="lien" onClick={() => ouvrir(`perso/${moi.id}/${f}`)}>Ouvrir</button>}
+                        <label className="lien" style={{ flexDirection: "row", fontSize: "inherit", color: "inherit" }}>{f ? "Remplacer" : "Ajouter"}
+                          <input type="file" hidden accept=".pdf,.docx,.doc,.txt,.md,.odt,.pptx,.ppt" onChange={(e) => e.target.files?.[0] && envoyerDoc(d, e.target.files[0], true)} /></label>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+
+          {moiM?.invitation === "accepte" && ["a_relire", "pret", "depose", "erreur"].includes(p.statut) && (
+            <div className="actions">
+              <button className="btn clair" onClick={relancer}>Refaire la rédaction avec ces documents</button>
+              <span className="small">Utile après avoir ajouté ou remplacé le prosit aller ou le retour.</span>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="bloc">
