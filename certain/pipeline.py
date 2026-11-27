@@ -42,11 +42,11 @@ def rest(methode, table, requete="", corps=None):
 def a_rediger():
     """Un dossier par (devoir Moodle, promotion). Les prosits individuels du même devoir sont rédigés ensemble :
     fond commun (mêmes faits), une version par étudiant. Chaque étudiant garde son prosit et ne voit pas les autres."""
-    prosits = rest("GET", "prosits", "?statut=eq.en_attente&select=*&order=cree_le.asc")
+    prosits = rest("GET", "prosits", "?statut=eq.en_attente&select=*&order=echeance.desc")
     if not prosits:
         print("Rien à rédiger.")
         return
-    groupes = {}
+    groupes, reserve = {}, {}
     for p in prosits:
         groupes.setdefault((p["cmid"], p.get("promotion")), []).append(p)
 
@@ -68,8 +68,12 @@ def a_rediger():
             ms = rest("GET", "prosit_membres",
                       f"?prosit_id=eq.{pid}&invitation=eq.accepte&annule=eq.false"
                       "&select=etudiant_id,fichier,refaire,etudiants(nom,prenoms,theme,credits)")
-            # Crédits indépendants : on rédige pour qui n'a pas encore son CER et a un crédit, ou demande une refonte
-            ms = [m for m in ms if m.get("refaire") or (not m.get("fichier") and m["etudiants"]["credits"] > 0)]
+            # Crédits indépendants : on rédige pour qui n'a pas encore son CER et a un crédit, ou demande une refonte.
+            # Les crédits déjà réservés dans cette session comptent (prosits du plus récent au plus ancien).
+            ms = [m for m in ms if m.get("refaire") or (not m.get("fichier") and m["etudiants"]["credits"] - reserve.get(m["etudiant_id"], 0) > 0)]
+            for m in ms:
+                if not m.get("refaire"):
+                    reserve[m["etudiant_id"]] = reserve.get(m["etudiant_id"], 0) + 1
             if not ms:   # plus personne à rédiger : on remet le prosit où il était
                 deja = rest("GET", "prosit_membres", f"?prosit_id=eq.{pid}&fichier=not.is.null&select=etudiant_id")
                 rest("PATCH", "prosits", f"?id=eq.{pid}", {"statut": "pret" if deja else "brouillon"})
