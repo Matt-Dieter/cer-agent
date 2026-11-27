@@ -96,7 +96,10 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
     await supabase.from("prosit_membres").update(champs).eq("prosit_id", id).eq("etudiant_id", moi.id); charger();
   };
   const action = async (rpc: "lancer" | "valider") => {
-    if (rpc === "lancer") await supabase.rpc("lancer_redaction", { p_prosit: id });
+    if (rpc === "lancer") {
+      const { error } = await supabase.rpc("lancer_redaction", { p_prosit: id });
+      if (error) setMsg(error.message.includes("Crédits") ? "Crédits épuisés : recharge pour lancer la rédaction." : "Impossible de lancer pour l'instant.");
+    }
     else await supabase.rpc("valider_prosit", { p_prosit: id });
     charger();
   };

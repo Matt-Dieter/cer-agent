@@ -1,5 +1,5 @@
 -- Crédits : 1 crédit = 1 CER livré à un étudiant. Plafond de départ offert, recharge par l'administrateur.
-alter table public.etudiants add column credits integer not null default 3;
+alter table public.etudiants add column credits integer not null default 2;
 update public.etudiants set credits = 5 where role <> 'admin';
 update public.etudiants set credits = 100 where role = 'admin';
 

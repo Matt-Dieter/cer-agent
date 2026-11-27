@@ -51,7 +51,9 @@ def a_rediger():
             continue
         membres = rest("GET", "prosit_membres",
                        f"?prosit_id=eq.{pid}&invitation=eq.accepte&annule=eq.false"
-                       "&select=etudiant_id,etudiants(nom,prenoms,theme)")
+                       "&select=etudiant_id,fichier,etudiants(nom,prenoms,theme,credits)")
+        # Plafond : seuls les membres avec un crédit (ou déjà livrés, pour une refonte) reçoivent un CER
+        membres = [m for m in membres if m["etudiants"]["credits"] > 0 or m.get("fichier")]
         dossier = Path("travail") / pid
         dossier.mkdir(parents=True, exist_ok=True)
         def lister(prefixe):

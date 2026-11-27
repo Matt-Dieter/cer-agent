@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 
-type Ligne = { email: string; ajoute_le: string; inscrit: boolean; moodle_relie: boolean; actif: boolean; role: string; nom: string; promotion: string | null };
+type Ligne = { email: string; ajoute_le: string; inscrit: boolean; moodle_relie: boolean; actif: boolean; role: string; nom: string; promotion: string | null; credits: number | null };
 
 // Réservé à l'administrateur : qui peut utiliser CERtain
 export default function Acces() {
@@ -26,6 +26,13 @@ export default function Acces() {
     setMsg(refus.length ? { ok: false, texte: `${ok} ajoutée(s). Refusée(s), il faut une adresse @ucac-icam.com : ${refus.join(", ")}` }
       : { ok: true, texte: `${ok} adresse${ok > 1 ? "s" : ""} autorisée${ok > 1 ? "s" : ""}. Envoie-leur le lien du site.` });
     setEmail(""); charger();
+  };
+  const recharger = async (l: Ligne) => {
+    const n = Number(prompt(`Combien de crédits ajouter à ${l.nom || l.email} ? (2,5k = 5 crédits)`, "5"));
+    if (!Number.isInteger(n) || n === 0) return;
+    const { data, error } = await supabase.rpc("admin_ajouter_credits", { p_email: l.email, p_nombre: n, p_motif: "Recharge" });
+    setMsg(error ? { ok: false, texte: error.message } : { ok: true, texte: `${n} crédits ajoutés à ${l.email}. Solde : ${data}.` });
+    charger();
   };
   const retirer = async (l: Ligne) => {
     if (!confirm(`Retirer l'accès de ${l.nom || l.email} ? Son compte ne verra plus rien et CERtain cessera de déposer pour lui.`)) return;
@@ -61,6 +68,7 @@ export default function Acces() {
               <span className={`statut ${!l.inscrit ? "" : l.moodle_relie ? "ok" : "attention"}`}>
                 {l.role === "admin" ? "administrateur" : !l.inscrit ? "invité" : l.moodle_relie ? "Moodle relié" : "Moodle à relier"}
               </span>
+              {l.inscrit && <><span className="mono">{l.credits ?? 0} cr.</span><button className="lien" onClick={() => recharger(l)}>Recharger</button></>}
               {l.role !== "admin" && <button className="lien" onClick={() => retirer(l)}>Retirer</button>}
             </span>
           </li>

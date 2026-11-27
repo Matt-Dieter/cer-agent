@@ -54,6 +54,7 @@ function Connecte({ moi, recharger }: { moi: Etudiant; recharger: () => void }) 
         <nav>
           <NavLink to="/" end>Prosits</NavLink>
           <NavLink to="/alertes">Alertes{al.nonLues > 0 && <span className="compteur" aria-label={`${al.nonLues} non lues`}>{al.nonLues}</span>}</NavLink>
+          <NavLink to="/profil" className="credits-lien">{moi.credits} crédit{moi.credits > 1 ? "s" : ""}</NavLink>
           <NavLink to="/profil">Profil{incomplet && <span className="point" aria-label="à compléter" />}</NavLink>
           {moi.role === "admin" && <NavLink to="/acces">Accès</NavLink>}
           <button onClick={() => supabase.auth.signOut()}>Sortir</button>

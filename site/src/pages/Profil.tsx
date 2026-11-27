@@ -23,7 +23,7 @@ export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () 
   return (
     <div className="page">
       <div className="entete">
-        <div><span className="meta">{moi.email}</span><h1>Ton profil</h1></div>
+        <div><span className="meta">{moi.email} · {moi.credits} crédit{moi.credits > 1 ? "s" : ""}</span><h1>Ton profil</h1></div>
         <div className="actions" style={{ margin: 0 }}>
           {msg && <span className="mono">{msg}</span>}
           <button className="btn" form="profil">Enregistrer</button>
