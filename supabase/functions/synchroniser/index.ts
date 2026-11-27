@@ -156,20 +156,8 @@ Deno.serve(async (req) => {
         const st = await ws(jeton, "mod_assign_get_submission_status", { assignid: String(d.id) }).catch(() => null);
         if (st?.lastattempt?.submission?.status === "submitted") continue;
 
-        // Un camarade du même groupe suit déjà ce devoir → on le rejoint
-        // Même devoir, même promotion, même groupe (écrit à peu près pareil : « Groupe 2 », « groupe2 », « G2 »…)
+        // Chaque étudiant a son propre prosit (personne ne voit celui des autres) ; la session de rédaction regroupe les prosits d'un même devoir
         const groupe = (e.groupe ?? "").trim();
-        if (groupe) {
-          let qa = admin.from("prosits").select("id, groupe").eq("cmid", d.cmid).not("statut", "in", "(depose)");
-          qa = e.promotion ? qa.eq("promotion", e.promotion) : qa.is("promotion", null);
-          const { data: candidats } = await qa;
-          const ami = (candidats ?? []).find((c: { groupe: string }) => norm(c.groupe ?? "") === norm(groupe));
-          if (ami) {
-            await admin.from("prosit_membres").upsert({ prosit_id: ami.id, etudiant_id: e.id, invitation: "accepte" });
-            resultat.push({ etudiant: e.id, cmid: d.cmid, action: "rejoint" });
-            continue;
-          }
-        }
 
         const notion = notionDe(c);
         const { data: p, error } = await admin.from("prosits").insert({

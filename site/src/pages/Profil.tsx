@@ -6,7 +6,6 @@ import Style from "../Style";
 export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () => void }) {
   const [nom, setNom] = useState(moi.nom);
   const [prenoms, setPrenoms] = useState(moi.prenoms);
-  const [groupe, setGroupe] = useState(moi.groupe);
   const [auto, setAuto] = useState(moi.auto);
   const [theme, setTheme] = useState<ThemeComplet>(complet(moi.theme));
   const [msg, setMsg] = useState("");
@@ -14,7 +13,7 @@ export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () 
   const enregistrer = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const { error } = await supabase.from("etudiants")
-      .update({ nom: nom.trim().toUpperCase(), prenoms: prenoms.trim(), groupe: groupe.trim(), theme, auto }).eq("id", moi.id);
+      .update({ nom: nom.trim().toUpperCase(), prenoms: prenoms.trim(), theme, auto }).eq("id", moi.id);
     setMsg(error ? "L'enregistrement n'est pas passé." : "Enregistré.");
     onChange();
     setTimeout(() => setMsg(""), 2500);
@@ -35,8 +34,6 @@ export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () 
         <form className="champs" onSubmit={enregistrer} id="profil">
           <label>Nom<input value={nom} onChange={(e) => setNom(e.target.value)} placeholder="MASSOMA" required /></label>
           <label>Prénoms<input value={prenoms} onChange={(e) => setPrenoms(e.target.value)} placeholder="Edouard Matt-Dieter" required /></label>
-          <label className="plein">Ton groupe de prosit<input value={groupe} onChange={(e) => setGroupe(e.target.value)} placeholder="Groupe 2" />
-            <span className="mono">Le petit groupe qui fait le prosit avec toi, pas ta promotion. Écris-le comme tes camarades (« Groupe 2 ») : vous serez réunis sur le même prosit. Il ne figure pas sur ton CER.</span></label>
           <label>Promotion<input value={moi.promotion ? `Promotion ${moi.promotion}` : "Non reconnue"} disabled />
             <span className="mono">Déduite de ton adresse e-mail. Deux promotions ne sont jamais mélangées.</span></label>
         </form>
@@ -61,7 +58,7 @@ export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () 
       <Credits moi={moi} />
 
       <section className="bloc bloc-large">
-        <header><span className="meta">05</span><h2>Ton style</h2><p>La forme de ton CER, de la garde aux numéros de page. Le fond reste celui du groupe, rédigé à ta façon.</p></header>
+        <header><span className="meta">05</span><h2>Ton style</h2><p>La forme de ton CER, de la garde aux numéros de page. Les faits restent les mêmes pour tous, rédigés à ta façon.</p></header>
         <Style theme={theme} onChange={setTheme} nom={`${prenoms} ${nom.toUpperCase()}`.trim()} annee={anneeCourante()} />
       </section>
     </div>
@@ -117,7 +114,7 @@ function Credits({ moi }: { moi: Etudiant }) {
   useEffect(() => { supabase.rpc("tarif_actuel").then(({ data }) => setT(data?.[0] ?? null)); }, []);
   return (
     <section className="bloc">
-      <header><span className="meta">04</span><h2>Tes crédits</h2><p>Un crédit = un CER rédigé pour toi. Chacun paie le sien, même dans un groupe.</p></header>
+      <header><span className="meta">04</span><h2>Tes crédits</h2><p>Un crédit = un CER rédigé pour toi. Chacun paie le sien.</p></header>
       <div>
         <p style={{ fontSize: "1.6rem", margin: 0 }}>{moi.credits} crédit{moi.credits > 1 ? "s" : ""}</p>
         {t && (
@@ -126,7 +123,8 @@ function Credits({ moi }: { moi: Etudiant }) {
             {t.places_restantes > 0 ? ` Tarif de lancement : plus que ${t.places_restantes} place${t.places_restantes > 1 ? "s" : ""} à ce prix, ensuite 2 500 FCFA.` : ""}
           </p>
         )}
-        <p className="doux" style={{ fontSize: ".9rem" }}>Paie à l'administrateur par mobile money, indique-lui l'adresse de ton compte : il ajoute tes crédits.</p>
+        <p className="doux" style={{ fontSize: ".9rem" }}>Paie par mobile money, puis envoie-moi l'adresse de ton compte : j'ajoute tes crédits.</p>
+        <p className="mono" style={{ margin: 0 }}>Orange Money : 6 88 39 01 70<br />MTN MoMo : 6 82 34 30 86</p>
       </div>
     </section>
   );

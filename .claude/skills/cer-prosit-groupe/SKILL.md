@@ -51,7 +51,7 @@ Page de garde : « CER PROSIT N », sujet, sous-titre éventuel, puis seulement 
 
 **CONCLUSION** (120 à 200 mots) : répond explicitement à la problématique, rappelle chaque apport du plan, relie à la généralisation.
 
-**BIBLIOGRAPHIE** : uniquement des sources réellement ouvertes. « Auteur ou organisme, « Titre », année, URL ». En dernier : « Texte du prosit « … », <groupe> » et, si fourni, « Prosit retour, séance du JJ/MM/AAAA, <groupe> ».
+**BIBLIOGRAPHIE** : uniquement des sources réellement ouvertes. « Auteur ou organisme, « Titre », année, URL ». En dernier : « Texte du prosit « … » » (suivi du groupe seulement s'il est renseigné dans `prosit.json`) et, si fourni, « Prosit retour, séance du JJ/MM/AAAA ».
 
 ## Étapes
 
