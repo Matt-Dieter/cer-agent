@@ -133,28 +133,36 @@ Deno.serve(async (req) => {
 
     for (const c of cours) {
       for (const d of c.assignments) {
-        if (diag) vus.push({ cours: c.fullname, devoir: d.name, cer: estUnCer(c, d), echeance: d.duedate ? new Date(d.duedate * 1000).toISOString().slice(0, 10) : null });
+        const note = (raison: string) => { if (diag) vus.push({ cours: c.fullname, devoir: d.name, echeance: d.duedate ? new Date(d.duedate * 1000).toISOString() : null, raison }); };
         if (!estUnCer(c, d)) continue;
         // Variantes « (Kin) » d'un autre campus : jamais déposées ici
-        if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name)) continue;
+        if (/\(\s*kin\s*\)|\bkin\b/i.test(d.name)) { note("variante Kin"); continue; }
         // deno-lint-ignore no-explicit-any
         const dd = d as any;
-        if (dd.cutoffdate && dd.cutoffdate < maintenant) continue;         // devoir fermé
+        if (dd.cutoffdate && dd.cutoffdate < maintenant) { note("devoir fermé (cutoff " + new Date(dd.cutoffdate * 1000).toISOString() + ")"); continue; }         // devoir fermé
         // À venir (21 j) ou en retard de moins de 14 j sur un devoir encore ouvert : on rattrape
-        if (!d.duedate || d.duedate < maintenant - RATTRAPAGE_J * 86400 || d.duedate > maintenant + HORIZON_J * 86400) continue;
+        if (!d.duedate || d.duedate < maintenant - RATTRAPAGE_J * 86400 || d.duedate > maintenant + HORIZON_J * 86400) { note("hors fenêtre de dates"); continue; }
 
         // Supprimé par l'étudiant : ne jamais le recréer
         const { data: ignore } = await admin.from("depots_ignores").select("cmid").eq("etudiant_id", e.id).eq("cmid", d.cmid);
-        if (ignore?.length) continue;
+        if (ignore?.length) { note("supprimé par l'étudiant"); continue; }
 
         // Déjà suivi par cet étudiant ?
         const { data: deja } = await admin.from("prosit_membres").select("prosit_id, prosits!inner(cmid)")
           .eq("etudiant_id", e.id).eq("prosits.cmid", d.cmid);
-        if (deja?.length) continue;
+        if (deja?.length) { note("déjà suivi"); continue; }
 
         // Déjà rendu sur Moodle ?
         const st = await ws(jeton, "mod_assign_get_submission_status", { assignid: String(d.id) }).catch(() => null);
-        if (st?.lastattempt?.submission?.status === "submitted") continue;
+        if (st?.lastattempt?.submission?.status === "submitted") {
+          // deno-lint-ignore no-explicit-any
+          const plugins = (st.lastattempt.submission.plugins ?? []) as any[];
+          // deno-lint-ignore no-explicit-any
+          const fichiers = plugins.reduce((n, pl) => n + (pl.fileareas ?? []).reduce((m: number, fa: any) => m + (fa.files?.length ?? 0), 0), 0);
+          note(`déjà rendu sur Moodle (fichiers : ${fichiers}, modifié le ${new Date((st.lastattempt.submission.timemodified ?? 0) * 1000).toISOString()}, groupe : ${st.lastattempt.submissiongroup ?? "-"}, équipe : ${st.lastattempt.teamsubmission ? "oui" : "non"})`);
+          continue;
+        }
+        note("RETENU");
 
         // Chaque étudiant a son propre prosit (personne ne voit celui des autres) ; la session de rédaction regroupe les prosits d'un même devoir
         const groupe = (e.groupe ?? "").trim();
