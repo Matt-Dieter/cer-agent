@@ -62,9 +62,9 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
     charger();
   };
   const relancer = async () => {
-    if (!confirm("Refaire la rédaction avec les documents actuels ? Elle repartira au prochain passage (12h43 ou 21h43) et ton CER sera redéposé avec la nouvelle version.")) return;
+    if (moiM?.fichier && !confirm("Refaire ton CER avec les documents actuels ? Il repartira au prochain passage (12h43 ou 21h43) et sera redéposé avec la nouvelle version.")) return;
     const { error } = await supabase.rpc("relancer_redaction", { p_prosit: id });
-    setMsg(error ? "Impossible de relancer pour l'instant." : "Rédaction relancée : elle partira au prochain passage."); charger();
+    setMsg(error ? (error.message.includes("Crédits") ? "Crédits épuisés : recharge pour obtenir ton CER." : "Impossible de relancer pour l'instant.") : moiM?.fichier ? "Refonte demandée : elle partira au prochain passage." : "C'est parti : ton CER sera rédigé au prochain passage."); charger();
   };
   const inviter = async (e: React.FormEvent) => {
     e.preventDefault(); setMsg("");
@@ -224,8 +224,11 @@ export default function PrositDetail({ moi }: { moi: Etudiant }) {
 
           {moiM?.invitation === "accepte" && ["a_relire", "pret", "depose", "erreur"].includes(p.statut) && (
             <div className="actions">
-              <button className="btn clair" onClick={relancer}>Refaire la rédaction avec ces documents</button>
-              <span className="small">Utile après avoir ajouté ou remplacé le prosit aller ou le retour.</span>
+              {moiM.fichier
+                ? <><button className="btn clair" onClick={relancer}>Refaire mon CER avec ces documents</button>
+                    <span className="small">Utile après avoir ajouté ou remplacé le prosit aller ou le retour. Ça ne coûte pas de crédit.</span></>
+                : <><button className="btn" onClick={relancer}>Obtenir mon CER (1 crédit)</button>
+                    <span className="small">Chacun paie son propre CER : il te reste {moi.credits} crédit{moi.credits > 1 ? "s" : ""}.</span></>}
             </div>
           )}
         </div>

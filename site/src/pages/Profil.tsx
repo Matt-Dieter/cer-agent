@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase, anneeCourante, type Etudiant } from "../supabase";
 import { complet, type ThemeComplet } from "../theme";
 import Style from "../Style";
@@ -58,8 +58,10 @@ export default function Profil({ moi, onChange }: { moi: Etudiant; onChange: () 
         </div>
       </section>
 
+      <Credits moi={moi} />
+
       <section className="bloc bloc-large">
-        <header><span className="meta">04</span><h2>Ton style</h2><p>La forme de ton CER, de la garde aux numéros de page. Le fond reste celui du groupe, rédigé à ta façon.</p></header>
+        <header><span className="meta">05</span><h2>Ton style</h2><p>La forme de ton CER, de la garde aux numéros de page. Le fond reste celui du groupe, rédigé à ta façon.</p></header>
         <Style theme={theme} onChange={setTheme} nom={`${prenoms} ${nom.toUpperCase()}`.trim()} annee={anneeCourante()} />
       </section>
     </div>
@@ -105,6 +107,26 @@ function LienMoodle({ moi, onChange }: { moi: Etudiant; onChange: () => void }) 
         )}
         {msg && <div className={msg.ok ? "message" : "message erreur"}>{msg.texte}</div>}
         <p className="doux" style={{ fontSize: ".85rem", marginTop: "1rem" }}>Pour couper l'accès depuis Moodle : Préférences → Clés de sécurité → Réinitialiser.</p>
+      </div>
+    </section>
+  );
+}
+
+function Credits({ moi }: { moi: Etudiant }) {
+  const [t, setT] = useState<{ prix: number; credits: number; places_restantes: number } | null>(null);
+  useEffect(() => { supabase.rpc("tarif_actuel").then(({ data }) => setT(data?.[0] ?? null)); }, []);
+  return (
+    <section className="bloc">
+      <header><span className="meta">04</span><h2>Tes crédits</h2><p>Un crédit = un CER rédigé pour toi. Chacun paie le sien, même dans un groupe.</p></header>
+      <div>
+        <p style={{ fontSize: "1.6rem", margin: 0 }}>{moi.credits} crédit{moi.credits > 1 ? "s" : ""}</p>
+        {t && (
+          <p className="doux" style={{ marginTop: ".6rem" }}>
+            Recharge : {t.prix.toLocaleString("fr-FR")} FCFA les {t.credits} crédits.
+            {t.places_restantes > 0 ? ` Tarif de lancement : plus que ${t.places_restantes} place${t.places_restantes > 1 ? "s" : ""} à ce prix, ensuite 2 500 FCFA.` : ""}
+          </p>
+        )}
+        <p className="doux" style={{ fontSize: ".9rem" }}>Paie à l'administrateur par mobile money, indique-lui l'adresse de ton compte : il ajoute tes crédits.</p>
       </div>
     </section>
   );

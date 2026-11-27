@@ -51,9 +51,13 @@ def a_rediger():
             continue
         membres = rest("GET", "prosit_membres",
                        f"?prosit_id=eq.{pid}&invitation=eq.accepte&annule=eq.false"
-                       "&select=etudiant_id,fichier,etudiants(nom,prenoms,theme,credits)")
-        # Plafond : seuls les membres avec un crédit (ou déjà livrés, pour une refonte) reçoivent un CER
-        membres = [m for m in membres if m["etudiants"]["credits"] > 0 or m.get("fichier")]
+                       "&select=etudiant_id,fichier,refaire,etudiants(nom,prenoms,theme,credits)")
+        # Crédits indépendants : on rédige pour qui n'a pas encore son CER et a un crédit, ou demande une refonte
+        membres = [m for m in membres if m.get("refaire") or (not m.get("fichier") and m["etudiants"]["credits"] > 0)]
+        if not membres:   # plus personne à rédiger (annulation entre-temps) : on remet le prosit où il était
+            deja = rest("GET", "prosit_membres", f"?prosit_id=eq.{pid}&fichier=not.is.null&select=etudiant_id")
+            rest("PATCH", "prosits", f"?id=eq.{pid}", {"statut": "pret" if deja else "brouillon"})
+            continue
         dossier = Path("travail") / pid
         dossier.mkdir(parents=True, exist_ok=True)
         def lister(prefixe):
@@ -98,7 +102,7 @@ def livrer(dossier):
         appel("POST", f"/storage/v1/object/prosits/{urllib.parse.quote(chemin)}", (dossier / nom_fichier).read_bytes(),
               {"Content-Type": DOCX, "x-upsert": "true"})
         rest("PATCH", "prosit_membres", f"?prosit_id=eq.{pid}&etudiant_id=eq.{etudiant}",
-             {"fichier": chemin, "depot_statut": "CER prêt",
+             {"fichier": chemin, "depot_statut": "CER prêt", "refaire": False,
               "fichier_maj_le": datetime.now(timezone.utc).isoformat()})
     # Dépôt d'abord, relecture ensuite : « a_relire » part aussi sur Moodle tout de suite
     statut = "pret" if liv.get("statut") == "pret" else "a_relire"
